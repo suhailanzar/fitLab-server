@@ -1,0 +1,38 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Dependency directories
+node_modules/
+
+# Environment files
+.env
+
+# IDE/editor directories and files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+
+# Compiled JavaScript files
+*.js
+*.js.map
+
+# TypeScript declaration files
+*.d.ts
+
+# PM2 logs and PIDs
+.pm2/logs/
+.pm2/pids/
+
+# Coverage directory used by testing tools
+coverage/
