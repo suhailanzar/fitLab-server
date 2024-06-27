@@ -1,7 +1,7 @@
 import { ItrainerRepository } from "../interfaces/ItrainerRepository";
 import { IuserInteractor } from "../interfaces/Iuserinteractor";
 import { Response, Request, NextFunction } from "express";
-import { Trainer } from "../entities/Trainer";
+import { Slot, Trainer } from "../entities/Trainer";
 import { trainerModel } from "../models/trainerModel";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -243,6 +243,76 @@ export class trainerRepository implements ItrainerRepository {
 
 
   getprofile = async (id: string): Promise<Trainer | null> => {
+    try {
+      const existingUser = await trainerModel.findOne({ _id: id });
+
+      if (!existingUser) {
+        return null;
+      }
+
+      console.log('existing user in getprofile is ', existingUser);
+
+      const trainer = new Trainer(
+        existingUser.trainername,
+        existingUser.email,
+        existingUser.password,
+        existingUser.isblocked,
+        existingUser.isapproved,
+        existingUser.availibilty,
+        existingUser.availableslots,
+        existingUser.image,
+        existingUser.phone,
+        existingUser.specification,
+        existingUser.id,
+
+      );
+
+      return trainer;
+
+    } catch (error) {
+      console.error("Error fetching trainer profile:", error);
+      throw error;
+    }
+  };
+
+
+
+  addslot = async (id: string , slot:Slot): Promise< string | null> => {
+    try {
+      const existingUser = await trainerModel.findOne({ _id: id });
+  
+      if (!existingUser) {
+        return null;
+      }
+  
+  
+      const slotToAdd: Slot = {
+
+        userid:null,
+        date: slot.date,
+        startTime: slot.startTime,
+        price:slot.price,
+        status:false
+
+      };
+  
+      // Add the new slot to the existing available slots
+      existingUser.availableslots.push(slotToAdd);
+  
+      // Update the trainer document in the database
+      await trainerModel.updateOne({ _id: id }, { availableslots: existingUser.availableslots });
+  
+      return "added slot successfully";
+  
+  
+    } catch (error) {
+      console.error("Error adding slot to trainer profile:", error);
+      throw error;
+    }
+  };
+
+
+  getslots = async (id: string): Promise<Trainer | null> => {
     try {
       const existingUser = await trainerModel.findOne({ _id: id });
 

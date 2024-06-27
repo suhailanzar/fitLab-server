@@ -23,7 +23,8 @@ router.post('/otp',controller.otp.bind(controller))
 router.post('/resendOtp',controller.resendOtp.bind(controller))
 router.patch('/editProfile',authenticateTrainerToken,trainerpofileupload.single('image'),controller.editProfileTrainer.bind(controller))
 router.get('/getprofile',authenticateTrainerToken,controller.getprofile.bind(controller))
-
+router.post('/addslot',authenticateTrainerToken,controller.addslot.bind(controller))
+router.get('/getslots',authenticateTrainerToken,controller.getslots.bind(controller))
 
 
 

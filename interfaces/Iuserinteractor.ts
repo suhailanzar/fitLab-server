@@ -1,4 +1,4 @@
-import { User } from "../entities/user";
+import { Payment, User } from "../entities/user";
 export interface IuserInteractor {
   findUser(email: string): Promise<User | null>;
   signup( username: string, email: string, password: string, isblocked: boolean ): Promise<User | null>;
@@ -11,6 +11,7 @@ export interface IuserInteractor {
   userLogin(email: string): Promise<string>;
   getTrainer(): Promise<Array<any>>
   searchTrainer(query: string | RegExp): Promise<Array<any>>
+  savepayment(datas:Payment): Promise<Array<any>>
 
 
 }

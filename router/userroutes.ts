@@ -18,6 +18,7 @@ router.post("/signup", controller.signup.bind(controller));
 router.post('/login',controller.login.bind(controller))
 router.post('/otp',controller.otp.bind(controller))
 router.post('/resendOtp',controller.resendOtp.bind(controller))
+router.post('/savepayment',controller.savepayment.bind(controller))
 
 router.get("/gettrainers",controller.getTrainers.bind(controller))
 router.get("/searchtrainers",controller.searchtrainers.bind(controller))

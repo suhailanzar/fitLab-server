@@ -7,7 +7,7 @@ import { IuserInteractor } from "../interfaces/Iuserinteractor";
 import { User } from "../entities/user";
 import bcrypt from "bcryptjs";
 import { sign } from "jsonwebtoken";
-import { AUTH_ERRORS} from "../constants/errorHandling"
+import { AUTH_ERRORS } from "../constants/errorHandling"
 
 export class userController {
   private userdatas!: User;
@@ -20,14 +20,14 @@ export class userController {
   // for user login
 
   login = async (req: Request, res: Response, next: NextFunction) => {
-    
+
     try {
       if (!req.body) {
         return res
           .status(ResponseStatus.BadRequest)
           .json({ message: AUTH_ERRORS.NO_DATA.message });
       }
-      
+
 
       const user = {
         email: req.body.email ? req.body.email.trim() : null,
@@ -47,7 +47,7 @@ export class userController {
       }
 
       const userExist = await this.Interactor.findUser(user.email);
-  
+
 
 
       if (userExist) {
@@ -73,7 +73,7 @@ export class userController {
           }
 
           const token = await this.Interactor.jwt(userdata);
-          
+
           // const refreshToken = await this.Interactor.refreshToken(userdata);
           return res.status(ResponseStatus.Accepted).json({
             message: AUTH_ERRORS.LOGIN_SUCCESS.message,
@@ -135,7 +135,7 @@ export class userController {
 
 
       if (datas) {
-       return  res.status(ResponseStatus.BadRequest)
+        return res.status(ResponseStatus.BadRequest)
           .json({ message: AUTH_ERRORS.USER_EXIST.message });
       }
 
@@ -157,7 +157,7 @@ export class userController {
   otp = async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (!req.body) {
-        return res.status(ResponseStatus.BadRequest).json({ message:AUTH_ERRORS.NO_DATA.message })
+        return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.NO_DATA.message })
       }
       const { inputone, inputtwo, inputthree, inputfour } = req.body;
       // Concatenate the input values as strings
@@ -166,28 +166,28 @@ export class userController {
       // Convert the concatenated string to a number
       const combinedNumber = Number(combinedString);
       const checkingotp = await this.Interactor.otpcheck(combinedNumber, this.userdatas.email)
-      
+
       if (checkingotp.isExpired) {
 
         return res
-        .status(ResponseStatus.BadRequest)
-        .json({ message: AUTH_ERRORS.OTP_EXPIRED.message })  
+          .status(ResponseStatus.BadRequest)
+          .json({ message: AUTH_ERRORS.OTP_EXPIRED.message })
       }
       if (checkingotp.isValid) {
 
         const createuser = await this.Interactor.RegisterUser(this.userdatas)
-        if(createuser){
-         return res
-         .status(ResponseStatus.Created)
-         .json({ message:AUTH_ERRORS.REGISTER_SUCCESS.message });
-        }else{
+        if (createuser) {
           return res
-          .status(ResponseStatus.BadRequest)
-          .json({ message: AUTH_ERRORS.REGISTER_FAILED.message });
+            .status(ResponseStatus.Created)
+            .json({ message: AUTH_ERRORS.REGISTER_SUCCESS.message });
+        } else {
+          return res
+            .status(ResponseStatus.BadRequest)
+            .json({ message: AUTH_ERRORS.REGISTER_FAILED.message });
         }
-        
+
       } else {
-          return res 
+        return res
           .status(ResponseStatus.BadRequest)
           .json({ message: AUTH_ERRORS.OTP_INVALID.message })
 
@@ -200,66 +200,90 @@ export class userController {
 
 
   resendOtp = async (req: Request, res: Response, next: NextFunction) => {
-      
-       try {        
-        const resendedotp =  await this.Interactor.sendmail(this.userdatas.email)
-        if(resendedotp){
-          return res.status(ResponseStatus.Accepted).json({message: AUTH_ERRORS.OTP_RESEND.message})
-        }
-        return res.status(ResponseStatus.BadRequest).json({message:AUTH_ERRORS.OTP_FAILED.message})
+
+    try {
+      const resendedotp = await this.Interactor.sendmail(this.userdatas.email)
+      if (resendedotp) {
+        return res.status(ResponseStatus.Accepted).json({ message: AUTH_ERRORS.OTP_RESEND.message })
+      }
+      return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.OTP_FAILED.message })
 
 
-       } catch (error) {
-        next(error);
-       }
-      
-    
+    } catch (error) {
+      next(error);
     }
-    
-    
+
+
+  }
+
+
 
 
   getTrainers = async (req: Request, res: Response, next: NextFunction) => {
-try {
-  const trainers = await this.Interactor.getTrainer()
-  
-  if(trainers){
-    return res 
-    .status(ResponseStatus.Accepted)
-    .json({ message: AUTH_ERRORS.FETCH_SUCCESS.message,trainers:trainers })
-  }
-  return res 
-  .status(ResponseStatus.NotFound)
-  .json({ message: AUTH_ERRORS.USER_NOT_FOUND.message })
+    try {
+      const trainers = await this.Interactor.getTrainer()
+
+      if (trainers) {
+        return res
+          .status(ResponseStatus.Accepted)
+          .json({ message: AUTH_ERRORS.FETCH_SUCCESS.message, trainers: trainers })
+      }
+      return res
+        .status(ResponseStatus.NotFound)
+        .json({ message: AUTH_ERRORS.USER_NOT_FOUND.message })
 
 
-  
-} catch (error) {
-  console.log('enterd catch block');
-  next(error);
-}
 
-}
-
-
-searchtrainers = async (req: Request, res: Response, next: NextFunction) => {
-try {
-  const query = req.query.q;
-
-    if (typeof query !== 'string') {
-      return res.status(400).json({ message: 'Query parameter q must be a string' });
+    } catch (error) {
+      console.log('enterd catch block');
+      next(error);
     }
 
-    const results = await this.Interactor.searchTrainer(query);
-    res.json(results);
+  }
 
-  
-} catch (error) {
-  console.log('enterd catch block');
-  next(error);
-}
 
-}
+  searchtrainers = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const query = req.query.q;
+
+      if (typeof query !== 'string') {
+        return res.status(400).json({ message: 'Query parameter q must be a string' });
+      }
+
+      const results = await this.Interactor.searchTrainer(query);
+      res.json(results);
+
+
+    } catch (error) {
+      console.log('enterd catch block');
+      next(error);
+    }
+
+  }
+
+
+  savepayment = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+
+      if (!req.body) {
+        return res
+          .status(ResponseStatus.BadRequest)
+          .json({ message: AUTH_ERRORS.NO_DATA.message });
+      }
+    
+      const paymentdetails = req.body
+      console.log('dataform paymentis ',paymentdetails);
+      
+      const results = await this.Interactor.savepayment(paymentdetails);
+      res.json(results);
+
+ 
+    } catch (error) {
+      console.log('enterd catch block');
+      next(error);
+    }
+
+  }
 
 
 

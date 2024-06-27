@@ -1,7 +1,7 @@
 import { Trainer } from "../entities/Trainer";
+import { Slot } from "../entities/Trainer";
 import { ItrainerInteractor } from "../interfaces/Itrainerinteractor";
 import { ItrainerRepository } from "../interfaces/ItrainerRepository";
-import Jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -96,7 +96,28 @@ export class trainerInteractor implements ItrainerInteractor {
       
       return await this.trainerrepository.getprofile(id);
     } catch (error) {
-      console.error("Error in sendmail:", error);
+      console.error("Error in fetching profile:", error);
+      throw error;
+    }
+  };
+
+
+  addslot = async (id:string,slot:Slot): Promise< string | null> => {
+    try {
+      
+      return await this.trainerrepository.addslot(id,slot);
+    } catch (error) {
+      console.error("Error in adding slot:", error);
+      throw error;
+    }
+  };
+
+  getslots = async (id:string): Promise<Trainer | null> => {
+    try {
+      
+      return await this.trainerrepository.getslots(id);
+    } catch (error) {
+      console.error("Error in fetching profile:", error);
       throw error;
     }
   };

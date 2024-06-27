@@ -1,16 +1,14 @@
 import { IuserRepository } from "../interfaces/IuserRepository";
-import { IuserInteractor } from "../interfaces/Iuserinteractor";
-import { Response, Request, NextFunction } from "express";
-import { User } from "../entities/user";
+import { Payment, User } from "../entities/user";
 import { UserModel } from "../models/userModel";
 import { trainerModel } from "../models/trainerModel";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { generateOTP, sendOtpEmail } from '../services/nodemailer'
-import dotenv from "dotenv";
-import nodemailer from "nodemailer";
-import crypto from "crypto";
 import { Otp } from '../models/userotp'
+import { paymentModel } from "../models/payment";
+import { startSession } from 'mongoose';
+
 
 export class userRepository implements IuserRepository {
   // private _jwtotp: String | null = null;
@@ -202,6 +200,60 @@ export class userRepository implements IuserRepository {
     } catch (error) {
       console.log("error", error);
       throw error;
+    }
+  }
+
+
+  savepayment = async (paymentdetails:Payment): Promise<Array<string>> => {
+
+    const session = await startSession();
+    session.startTransaction();
+    try {
+      console.log('payment details from frontis ',paymentdetails);
+      
+      const user = await UserModel.findOne({email:paymentdetails.email});  
+      if (!user) {
+        return ['User not found'];
+      }
+          
+
+      const trainer = await trainerModel.findOneAndUpdate(
+        { _id: paymentdetails.trainerid, 'availableslots._id': paymentdetails.slotid },
+        {
+          $set: {
+            'availableslots.$.userid': user._id,
+            'availableslots.$.status': true
+          }
+        },
+        { new: true } // Return the updated document
+      );
+
+      const newPayment = new paymentModel({
+        transactionId: paymentdetails.razorpayPaymentId,
+        userId: user._id,
+        trainerId: paymentdetails.trainerid,
+        slotId: paymentdetails.slotid,
+        amount: paymentdetails.amount / 100,
+        currency: paymentdetails.currency,
+        paymentDate: new Date(),
+      });
+      
+
+      console.log('trainer details for payment is ',trainer);
+      console.log('new updated payment is',newPayment);
+      await newPayment.save({ session });
+
+      await session.commitTransaction();
+      console.log('Payment and slot update successful');
+
+
+      return ["hshsh","hshsh"];
+
+    } catch (error) {
+      console.log("error", error);
+      throw error;
+    } finally {
+      session.endSession();
     }
   }
 }

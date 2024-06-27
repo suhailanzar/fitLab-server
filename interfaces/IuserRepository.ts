@@ -1,5 +1,5 @@
 import { Trainer } from "../entities/Trainer";
-import { User } from "../entities/user";
+import { Payment, User } from "../entities/user";
 export interface IuserRepository {
   findUser(email: string): Promise<User | null>;
   refreshToken(payload: User): Promise<string>;
@@ -11,6 +11,7 @@ export interface IuserRepository {
   userLogin(email: string): Promise<string>;
   getTrainers(): Promise<Array<Trainer>>
   searchTrainer(query: string | RegExp): Promise<Array<any>>
+  savepayment(datas:Payment): Promise<Array<any>>
 
 
 

@@ -1,5 +1,5 @@
 import { TreatAsPrimitives } from "mongoose";
-import { Trainer } from "../entities/Trainer";
+import { Slot, Trainer } from "../entities/Trainer";
 export interface ItrainerRepository {
   findtrainer(email: string): Promise<Trainer | null>;
   refreshToken(payload: Trainer): Promise<string>;
@@ -11,8 +11,8 @@ export interface ItrainerRepository {
   trainerLogin(email: string): Promise<string>;
   editProfileTrainer(data:Trainer, id:string , image:Express.Multer.File): Promise<string>;
   getprofile( id:string): Promise<Trainer | null>;
-
-
+  addslot( id:string , slot:Slot): Promise<string | null>;
+  getslots( id:string): Promise<Trainer | null>;
 
 
 }

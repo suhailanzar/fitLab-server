@@ -2,13 +2,10 @@ import { Response, Request, NextFunction } from "express";
 import { ResponseStatus } from "../constants/statusCodes";
 import { isValidEmail } from "../validations/emailValidation";
 import { isValidPassword } from "../validations/passwordValidations";
-import { trainerInteractor } from "../interactors/trainerinteractor";
 import { ItrainerInteractor } from "../interfaces/Itrainerinteractor";
 import { Trainer } from "../entities/Trainer";
 import bcrypt from "bcryptjs";
-import { sign } from "jsonwebtoken";
 import { AUTH_ERRORS } from "../constants/errorHandling";
-import multer from "multer";
 
 export class trainerController {
   private trainerData!: Trainer;
@@ -285,6 +282,64 @@ getprofile = async (req: Request, res: Response, next: NextFunction) => {
   }
 }
 
+
+addslot = async (req: Request, res: Response, next: NextFunction) => {
+  try {     
+    console.log('entered the controller of the addslot');
+    
+    const id = typeof req.user_id === 'string'? req.user_id : '';
+
+    if(!req.body){
+      return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.NO_DATA.message });
+
+    }
+
+    const slot = req.body
+
+    if (!id) {
+      return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.TOKEN_INVALID.message });
+    }
+
+    const addedslot = await this.Interactor.addslot( id,slot);
+    
+    if (addedslot) {
+      
+      return res.status(ResponseStatus.Accepted).json({ message: AUTH_ERRORS.FETCH_SUCCESS.message ,addedslot},);
+    }
+    
+    return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.USER_NOT_FOUND.message });
+
+  } catch (error) {
+    console.log('Entered catch block of addslot');
+    next(error);
+  }
+}
+
+
+
+
+getslots = async (req: Request, res: Response, next: NextFunction) => {
+  try {     
+    
+    const id = typeof req.user_id === 'string'? req.user_id : '';
+
+    if (!id) {
+      return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.TOKEN_INVALID.message });
+    }
+
+    const Details = await this.Interactor.getslots( id);
+    if (Details) {
+      
+      return res.status(ResponseStatus.Accepted).json({ message: AUTH_ERRORS.FETCH_SUCCESS.message ,Details},);
+    }
+    
+    return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.USER_NOT_FOUND.message });
+
+  } catch (error) {
+    console.log('Entered catch block of getslots ');
+    next(error);
+  }
+}
 
 
 

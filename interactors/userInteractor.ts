@@ -1,4 +1,4 @@
-import { User } from "../entities/user";
+import { Payment, User } from "../entities/user";
 import { IuserInteractor } from "../interfaces/Iuserinteractor";
 import { IuserRepository } from "../interfaces/IuserRepository";
 import Jwt from "jsonwebtoken";
@@ -118,6 +118,15 @@ export class userInteractor implements IuserInteractor {
   searchTrainer = async (query: string | RegExp): Promise<Array<any>> => {
     try {
       return await this.userRepository.searchTrainer(query);
+    } catch (error) {
+      console.error("Error in sendmail:", error);
+      throw error;
+    }
+  };
+
+  savepayment = async (paymentdetails:Payment): Promise<Array<any>> => {
+    try {
+      return await this.userRepository.savepayment(paymentdetails);
     } catch (error) {
       console.error("Error in sendmail:", error);
       throw error;
