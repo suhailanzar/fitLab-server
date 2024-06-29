@@ -11,6 +11,8 @@ import nodemailer from "nodemailer";
 import crypto from "crypto";
 import { Otp } from '../models/userotp'
 import { uploadS3Image } from "../utils/s3uploads";
+import { User } from "../entities/user";
+import { UserModel } from "../models/userModel";
 
 export class trainerRepository implements ItrainerRepository {
   // private _jwtotp: String | null = null;
@@ -344,6 +346,24 @@ export class trainerRepository implements ItrainerRepository {
       throw error;
     }
   };
+
+  
+  getclients = async (): Promise<Array<User> | null> => {
+
+    try {
+      const users = await UserModel.find({}) 
+      if (!users) {
+       return null
+      }
+      return users
+    
+    } catch (error) {
+      console.error('fetching users failed', error);
+      return null;
+    }
+   
+  }
+
 
 
 

@@ -38,7 +38,6 @@ export class adminRepository implements IadminRepository {
       getTrainers = async (): Promise<any> =>{
          try {
           const trainers = await trainerModel.find({isapproved:true})
-          console.log('trainers were....',trainers);
           
           return trainers
          } catch (error) {

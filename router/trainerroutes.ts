@@ -25,6 +25,7 @@ router.patch('/editProfile',authenticateTrainerToken,trainerpofileupload.single(
 router.get('/getprofile',authenticateTrainerToken,controller.getprofile.bind(controller))
 router.post('/addslot',authenticateTrainerToken,controller.addslot.bind(controller))
 router.get('/getslots',authenticateTrainerToken,controller.getslots.bind(controller))
+router.get('/clients',authenticateTrainerToken,controller.getclients.bind(controller))
 
 
 

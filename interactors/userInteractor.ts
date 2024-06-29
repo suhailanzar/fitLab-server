@@ -132,5 +132,21 @@ export class userInteractor implements IuserInteractor {
       throw error;
     }
   };
+  getMessages = async (data: any): Promise<Array<any> | string> => {
+    try {
+      const messages = await this.userRepository.getMessages(data);
+  
+      if (messages.length > 0) {
+        return messages;
+      } else {
+        console.log("No messages found");
+        return ["No messages found"];
+      }
+    } catch (error) {
+      console.error("Error in getMessages:", error);
+      throw error;
+    }
+  };
+  
 
 }

@@ -1,4 +1,5 @@
 import { Slot, Trainer } from "../entities/Trainer";
+import { User } from "../entities/user";
 
 export interface ItrainerInteractor {
   findtrainer(email: string): Promise<Trainer | null>;
@@ -13,6 +14,7 @@ export interface ItrainerInteractor {
   getprofile( id:string): Promise<Trainer | null>;
   addslot( id:string , slot:Slot): Promise< string | null>;
   getslots( id:string): Promise<Trainer | null>;
+  getclients(): Promise<Array<User> | null>;
 
 
 }

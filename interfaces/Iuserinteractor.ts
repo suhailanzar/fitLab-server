@@ -12,6 +12,7 @@ export interface IuserInteractor {
   getTrainer(): Promise<Array<any>>
   searchTrainer(query: string | RegExp): Promise<Array<any>>
   savepayment(datas:Payment): Promise<Array<any>>
+  getMessages(data: any): Promise<Array<any> | string> 
 
 
 }

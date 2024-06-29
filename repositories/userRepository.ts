@@ -8,6 +8,7 @@ import { generateOTP, sendOtpEmail } from '../services/nodemailer'
 import { Otp } from '../models/userotp'
 import { paymentModel } from "../models/payment";
 import { startSession } from 'mongoose';
+import { Message } from "../models/Message";
 
 
 export class userRepository implements IuserRepository {
@@ -101,15 +102,17 @@ export class userRepository implements IuserRepository {
   jwt = async (payload: User) => {
     try {
       const plainPayload = {
+        id:payload.id,
         username: payload.username,
         email: payload.email,
         password: payload.password,
         isblocked: payload.isblocked,
       };
+      console.log('jwt token pauyload is',plainPayload);
+      
       const token = jwt.sign(plainPayload, process.env.SECRET_LOGIN as string, {
         expiresIn: "2h",
       });
-      console.log('toke is ', token);
 
       return token;
     } catch (error) {
@@ -168,7 +171,9 @@ export class userRepository implements IuserRepository {
         existingUserDocument.username,
         existingUserDocument.email,
         existingUserDocument.password,
-        existingUserDocument.isblocked
+        existingUserDocument.isblocked,
+        existingUserDocument.id
+
       );
       console.log("usr from the findbyone in repo", user);
       return user;
@@ -256,4 +261,28 @@ export class userRepository implements IuserRepository {
       session.endSession();
     }
   }
+
+
+
+  getMessages = async (data: any): Promise<Array<any> | string> => {
+    try {
+      const messages = await Message.find({
+        $or: [
+          { senderId: data.userid, receiverId: data.trainerid },
+          { senderId: data.trainerid, receiverId: data.userid }
+        ]
+      }).sort({ timestamp: 1 });
+  
+      if (messages.length > 0) {
+        return messages;
+      } else {
+        console.log("No messages found");
+        return "no messages";
+      }
+    } catch (error) {
+      console.log("error", error);
+      throw error;
+    }
+  }
+  
 }

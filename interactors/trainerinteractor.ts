@@ -1,5 +1,6 @@
-import { Trainer } from "../entities/Trainer";
+ import { Trainer } from "../entities/Trainer";
 import { Slot } from "../entities/Trainer";
+import { User } from "../entities/user";
 import { ItrainerInteractor } from "../interfaces/Itrainerinteractor";
 import { ItrainerRepository } from "../interfaces/ItrainerRepository";
 import dotenv from "dotenv";
@@ -116,6 +117,17 @@ export class trainerInteractor implements ItrainerInteractor {
     try {
       
       return await this.trainerrepository.getslots(id);
+    } catch (error) {
+      console.error("Error in fetching profile:", error);
+      throw error;
+    }
+  };
+
+
+  getclients = async (): Promise<Array<User> | null> => {
+    try {
+      
+      return await this.trainerrepository.getclients();
     } catch (error) {
       console.error("Error in fetching profile:", error);
       throw error;

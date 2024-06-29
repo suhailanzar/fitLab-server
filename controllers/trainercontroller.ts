@@ -341,6 +341,25 @@ getslots = async (req: Request, res: Response, next: NextFunction) => {
   }
 }
 
+getclients = async (req: Request, res: Response, next: NextFunction) => {
+  try {     
+    
+
+    const clients = await this.Interactor.getclients();
+    if (clients) {
+      
+      return res.status(ResponseStatus.Accepted).json({ message: AUTH_ERRORS.FETCH_SUCCESS.message ,clients},);
+    }
+    
+    return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.USER_NOT_FOUND.message });
+
+  } catch (error) {
+    console.log('Entered catch block of getclients');
+    next(error);
+  }
+}
+
+
 
 
 }

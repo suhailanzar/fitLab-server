@@ -64,6 +64,7 @@ export class userController {
 
 
         const userdata = await this.Interactor.findUser(user.email);
+        
 
         if (userdata) {
           if (userdata.isblocked) {
@@ -286,9 +287,36 @@ export class userController {
   }
 
 
+  getMessages = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.body) {
+        console.log('no request from body');
+        return res
+          .status(ResponseStatus.BadRequest)
+          .json({ message: 'Request body is missing' });
+      }
+  
+      const data = req.body;
+      const results = await this.Interactor.getMessages(data);
 
-
+      console.log('messagess werer',results);
+      
+  
+      if (results) {
+        return res
+          .status(ResponseStatus.Accepted)
+          .json({ message: AUTH_ERRORS.FETCH_SUCCESS.message , messages:results });
+      } else {
+        return res
+          .status(ResponseStatus.BadRequest)
+          .json({ message: AUTH_ERRORS.NO_DATA.message });
+      }
+    } catch (error) {
+      console.error('Error in getMessages:', error);
+      return res
+        .status(ResponseStatus.BadRequest)
+        .json({ message: 'An error occurred while processing the request' });
+    }
+  };
 
 }
-
-

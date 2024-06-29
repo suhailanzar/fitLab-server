@@ -1,7 +1,9 @@
-import { Router } from 'express';
 import { userRepository } from '../repositories/userRepository';
 import { userInteractor } from '../interactors/userInteractor';
 import { userController } from '../controllers/usercontroller';
+import { Router, Request, Response } from 'express';
+import { ResponseStatus } from '../constants/statusCodes';
+
 const router = Router();
 
 // Creating a new instance of UserRepository to handle data access operations for the User entity.
@@ -19,9 +21,14 @@ router.post('/login',controller.login.bind(controller))
 router.post('/otp',controller.otp.bind(controller))
 router.post('/resendOtp',controller.resendOtp.bind(controller))
 router.post('/savepayment',controller.savepayment.bind(controller))
+router.post("/getMessages",controller.getMessages.bind(controller))
 
 router.get("/gettrainers",controller.getTrainers.bind(controller))
 router.get("/searchtrainers",controller.searchtrainers.bind(controller))
+
+router.get('/activate', (req: Request, res: Response) => {
+    res.status(ResponseStatus.OK).json({ message: 'chat iniated to backend' });
+})
 
 
 export default router;
