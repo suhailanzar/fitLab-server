@@ -33,7 +33,6 @@ export class userInteractor implements IuserInteractor {
     isblocked: boolean
   ): Promise<User | null> => {
     try {
-      console.log('entered the interactor user');
 
       const details = {
         username: username,
@@ -71,7 +70,6 @@ export class userInteractor implements IuserInteractor {
 
   otpcheck = async (otp: number, email: string): Promise<{ isValid: boolean, isExpired: boolean }> => {
 
-    console.log('entered otpcheck interactor', otp);
     return await this.userRepository.otpchecked(otp, email)
 
   };
@@ -124,14 +122,17 @@ export class userInteractor implements IuserInteractor {
     }
   };
 
-  savepayment = async (paymentdetails:Payment): Promise<Array<any>> => {
+  bookslot = async (paymentdetails:Payment): Promise<Array<any>> => {
     try {
-      return await this.userRepository.savepayment(paymentdetails);
+      return await this.userRepository.bookslot(paymentdetails);
     } catch (error) {
       console.error("Error in sendmail:", error);
       throw error;
     }
   };
+
+
+  
   getMessages = async (data: any): Promise<Array<any> | string> => {
     try {
       const messages = await this.userRepository.getMessages(data);
@@ -147,6 +148,44 @@ export class userInteractor implements IuserInteractor {
       throw error;
     }
   };
+
+  editprofile = async (data: User, id: string, image: any): Promise<User | null> => {
+    try {
+      const userdata = await this.userRepository.editprofile(data ,id, image);
+      if(userdata){
+        return userdata
+      }
+      return null
+     
+    } catch (error) {
+      console.error("Error in getMessages:", error);
+      throw error;
+    }
+  };
+
+  
+  getuserprofile = async (id:string): Promise<User | null> => {
+    try {
+      return await this.userRepository.getuserprofile(id);
+    } catch (error) {
+      console.error("Error in sendmail:", error);
+      throw error;
+    }
+  };
+
+  subscribe = async (paymentdetails:Payment, userid:string): Promise<Array<any>> => {
+    try {
+      return await this.userRepository.subscribe(paymentdetails,userid);
+    } catch (error) {
+      console.error("Error in sendmail:", error);
+      throw error;
+    }
+  };
+
+
+
+
+ 
   
 
 }

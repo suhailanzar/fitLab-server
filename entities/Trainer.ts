@@ -1,3 +1,4 @@
+import { ObjectId } from "mongoose";
 
 export class Trainer {
     constructor(
@@ -22,12 +23,42 @@ export class Trainer {
 export class Slot{
     constructor(
         public readonly userid: string | null,
+        public readonly username: string | null,
         public readonly date: string,
         public readonly startTime: string,
         public readonly price: number,
         public readonly status: boolean,
+        public readonly id :string
         
     ){
 
     }
+}
+
+
+export class IModule {
+    constructor(
+
+        public readonly name: string,
+        public readonly description: string,
+        public readonly videoUrl: string,
+){
+
+}
+}
+
+
+export class ICourse {
+    constructor(
+        public readonly author: string,
+        public readonly courseName: string,
+        public readonly description: string,
+        public readonly modules: IModule[],
+        public readonly price: number,
+        public readonly trainerId: ObjectId,
+        public readonly createdAt: Date,
+        public readonly updatedAt: Date,
+){
+
+}
 }

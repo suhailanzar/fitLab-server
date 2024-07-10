@@ -3,6 +3,8 @@ import { userInteractor } from '../interactors/userInteractor';
 import { userController } from '../controllers/usercontroller';
 import { Router, Request, Response } from 'express';
 import { ResponseStatus } from '../constants/statusCodes';
+import { userpofileupload } from '../utils/multer';
+import authenticateUserToken from '../middlewares/user_authmiddleware';
 
 const router = Router();
 
@@ -20,11 +22,16 @@ router.post("/signup", controller.signup.bind(controller));
 router.post('/login',controller.login.bind(controller))
 router.post('/otp',controller.otp.bind(controller))
 router.post('/resendOtp',controller.resendOtp.bind(controller))
-router.post('/savepayment',controller.savepayment.bind(controller))
-router.post("/getMessages",controller.getMessages.bind(controller))
+router.post('/bookslot',authenticateUserToken,controller.bookslot.bind(controller))
+router.post("/getMessages",authenticateUserToken,controller.getMessages.bind(controller))
+router.post("/editprofile",authenticateUserToken,userpofileupload.single('image'),controller.editprofile.bind(controller))
+router.post("/subscribe",authenticateUserToken,controller.subscribe.bind(controller))
 
-router.get("/gettrainers",controller.getTrainers.bind(controller))
-router.get("/searchtrainers",controller.searchtrainers.bind(controller))
+
+router.get("/gettrainers",authenticateUserToken,controller.getTrainers.bind(controller))
+router.get("/searchtrainers",authenticateUserToken,controller.searchtrainers.bind(controller))
+router.get("/getprofile",authenticateUserToken,controller.getprofile.bind(controller))
+
 
 router.get('/activate', (req: Request, res: Response) => {
     res.status(ResponseStatus.OK).json({ message: 'chat iniated to backend' });

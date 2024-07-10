@@ -11,8 +11,12 @@ export interface IuserInteractor {
   userLogin(email: string): Promise<string>;
   getTrainer(): Promise<Array<any>>
   searchTrainer(query: string | RegExp): Promise<Array<any>>
-  savepayment(datas:Payment): Promise<Array<any>>
+  bookslot(datas:Payment): Promise<Array<any>>
   getMessages(data: any): Promise<Array<any> | string> 
+  editprofile(data:User, id:string,image:any): Promise<User | null> 
+  getuserprofile(id: string): Promise<User | null>;
+  subscribe(datas:any,userid:string): Promise<Array<any>>
+
 
 
 }

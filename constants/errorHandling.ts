@@ -27,6 +27,9 @@ interface AuthErrors {
     FETCH_SUCCESS:AuthError
     ADMIN_APPROVAL:AuthError
     UPDATED:AuthError
+    UPLOAD_FAILED:AuthError
+    UPDATION_FAILED:AuthError
+    UPDATION_SUCCESS:AuthError
 }
 
 const AUTH_ERRORS: AuthErrors = {
@@ -96,6 +99,18 @@ const AUTH_ERRORS: AuthErrors = {
     },
     UPDATED:{
         message:"updated successfully"
+    },
+    UPLOAD_FAILED:{
+        message:"upload failed to cloud"
+
+    },
+    UPDATION_FAILED:{
+        message:"Updation Failed Not saved to the database"
+
+    },
+    UPDATION_SUCCESS:{
+        message:"Succesfully updated"
+
     }
 
 };

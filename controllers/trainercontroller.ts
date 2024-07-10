@@ -6,6 +6,11 @@ import { ItrainerInteractor } from "../interfaces/Itrainerinteractor";
 import { Trainer } from "../entities/Trainer";
 import bcrypt from "bcryptjs";
 import { AUTH_ERRORS } from "../constants/errorHandling";
+import { uploadS3Video } from "../utils/s3uploads";
+import { CompleteMultipartUploadCommandOutput } from "@aws-sdk/client-s3/dist-types/commands/CompleteMultipartUploadCommand";
+import { trainerModel } from "../models/trainerModel";
+import mongoose from 'mongoose';
+
 
 export class trainerController {
   private trainerData!: Trainer;
@@ -63,6 +68,7 @@ export class trainerController {
         const Trainerdata = await this.Interactor.findtrainer(Trainer.email);
 
         if (Trainerdata) {
+          this.trainerData = Trainerdata
           if (Trainerdata.isblocked) {
             return res
               .status(ResponseStatus.BadRequest)
@@ -355,6 +361,156 @@ getclients = async (req: Request, res: Response, next: NextFunction) => {
 
   } catch (error) {
     console.log('Entered catch block of getclients');
+    next(error);
+  }
+}
+
+
+getbookings = async (req: Request, res: Response, next: NextFunction) => {
+  try {     
+    
+    const traineridd = this.trainerData._id; 
+    if (!traineridd) {
+      console.log('trainer id in get booking is ',traineridd);
+      
+      return res.status(ResponseStatus.BadRequest).json({ message: 'Trainer ID is undefined' });
+    }    
+    const bookings = await this.Interactor.getbookings(traineridd);
+    console.log('bookings are ',bookings);
+    
+    if (bookings) {
+      console.log('entered the booking controller ',bookings);
+      
+      return res.status(ResponseStatus.Accepted).json({ message: AUTH_ERRORS.FETCH_SUCCESS.message ,bookings});
+    }
+    
+    return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.NO_DATA.message });
+
+  } catch (error) {
+    console.log('Entered catch block of getbookings');
+    next(error);
+  }
+}
+
+
+
+editSlot = async (req: Request, res: Response, next: NextFunction) => {
+  try {     
+
+    const trainerId = typeof req.user_id === 'string'? req.user_id : '';
+    
+    if (!trainerId)   return res.status(ResponseStatus.BadRequest).json({ message: 'Trainer ID is undefined' });
+          
+    const bodyrequest = req.body
+
+    if(!bodyrequest)   return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.NO_DATA.message });
+
+    const slotId = bodyrequest.slotid
+    const formdata = bodyrequest.data
+
+    const editedslot = await this.Interactor.editSlot(trainerId,slotId,formdata);
+    console.log('edited slot is ',editedslot);
+    
+    if (editedslot) {
+      console.log('entered the booking controller ',editedslot);
+      
+      return res.status(ResponseStatus.Accepted).json({ message: AUTH_ERRORS.FETCH_SUCCESS.message ,editedslot});
+    }
+    
+    return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.NO_DATA.message });
+
+  } catch (error) {
+    console.log('Entered catch block of getbookings');
+    next(error);
+  }
+}
+
+
+addCourse = async (req: Request, res: Response, next: NextFunction) => {
+  try {     
+
+    const trainerId = typeof req.user_id === 'string'? req.user_id : '';
+    
+    if (!trainerId)   return res.status(ResponseStatus.BadRequest).json({ message: 'Trainer ID is undefined' });
+
+    const trainerdetails = await trainerModel.findOne({_id:trainerId})
+       
+    const bodyRequest = req.body    
+    if(!bodyRequest)   return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.NO_DATA.message });  
+
+    
+
+    if(!trainerdetails)  {
+      return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.USER_NOT_FOUND.message });
+
+    }else{
+      
+    bodyRequest.trainerId = trainerId    
+    bodyRequest.author = trainerdetails.trainername
+    bodyRequest.createdAt = new Date()
+    }
+      
+    
+    let videos = req.files as Express.Multer.File[];
+    if (videos) {
+      try {
+        const videoUploadResults = await Promise.all(videos.map(file => uploadS3Video(file)));
+        
+        // Filter out any failed uploads
+        const successfulUploads = videoUploadResults.filter(
+          (result): result is CompleteMultipartUploadCommandOutput => 
+            'Location' in result && typeof result.Location === 'string'
+        );
+    
+        // Check if we have successful uploads for all videos
+        if (successfulUploads.length === videos.length) {
+          bodyRequest.modules.forEach((module: any, index: number) => {
+            module.videoUrl = successfulUploads[index].Location;
+          });
+          console.log('Urls of the videos from the S3 bucket:', successfulUploads.map(url => url.Location));
+        } else {
+          console.error('Error in uploading one or more videos to S3:', videoUploadResults);
+          return res.status(ResponseStatus.BadRequest).json({ message: "Error uploading one or more videos" });
+        }
+      } catch (error) {
+        console.error('Error in uploading video to S3:', error);
+        return res.status(ResponseStatus.BadRequest).json({ message: "Error uploading video" });
+      }
+    }
+
+    const updatedCourse = await this.Interactor.addCourse(bodyRequest);
+
+    if(!updatedCourse) return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.UPDATION_FAILED.message });
+
+    return res.status(ResponseStatus.Created).json({ message: AUTH_ERRORS.UPDATION_SUCCESS.message });
+
+  } catch (error) {
+    console.log('Entered catch block of getbookings');
+    next(error);
+  }
+}
+
+
+getCourses = async (req: Request, res: Response, next: NextFunction) => {
+  try {  
+    const trainerId = typeof req.user_id === 'string' ? req.user_id : '';
+
+    if (!trainerId) {
+      return res.status(ResponseStatus.BadRequest).json({ message: 'Trainer ID is undefined' });
+    }
+
+    const trainerObjectId = new mongoose.Types.ObjectId(trainerId) as any;
+
+    const availableCourses = await this.Interactor.getCourses(trainerObjectId as mongoose.Schema.Types.ObjectId);
+
+    if (availableCourses) {
+      return res.status(ResponseStatus.Accepted).json({ message: AUTH_ERRORS.FETCH_SUCCESS.message, availableCourses });
+    }
+    
+    return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.NO_DATA.message });
+
+  } catch (error) {
+    console.log('Entered catch block of getCourses');
     next(error);
   }
 }

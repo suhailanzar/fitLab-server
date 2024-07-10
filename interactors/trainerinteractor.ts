@@ -1,4 +1,5 @@
- import { Trainer } from "../entities/Trainer";
+ import { ObjectId } from "mongoose";
+import { ICourse, Trainer } from "../entities/Trainer";
 import { Slot } from "../entities/Trainer";
 import { User } from "../entities/user";
 import { ItrainerInteractor } from "../interfaces/Itrainerinteractor";
@@ -103,7 +104,7 @@ export class trainerInteractor implements ItrainerInteractor {
   };
 
 
-  addslot = async (id:string,slot:Slot): Promise< string | null> => {
+  addslot = async (id:string,slot:Slot): Promise< Slot | null> => {
     try {
       
       return await this.trainerrepository.addslot(id,slot);
@@ -128,6 +129,44 @@ export class trainerInteractor implements ItrainerInteractor {
     try {
       
       return await this.trainerrepository.getclients();
+    } catch (error) {
+      console.error("Error in fetching profile:", error);
+      throw error;
+    }
+  }; 
+
+  getbookings = async (trainerid:string): Promise<Array<Slot> | string> => {
+    try {
+      
+      return await this.trainerrepository.getbookings(trainerid);
+    } catch (error) {
+      console.error("Error in fetching profile:", error);
+      throw error;
+    }
+  };
+
+  editSlot = async (trainerid:string,slotid:string,data:Slot): Promise<Slot | null> => {
+    try {
+      return await this.trainerrepository.editSlot(trainerid,slotid,data);
+    } catch (error) {
+      console.error("Error in sendmail:", error);
+      throw error;
+    }
+  };
+
+  addCourse = async (CourseDetails:ICourse): Promise<string | null> => {
+    try {
+      return await this.trainerrepository.addCourse(CourseDetails);
+    } catch (error) {
+      console.error("Error in updainng document:", error);
+      throw error;
+    }
+  };
+  
+  getCourses = async (trainerid:ObjectId ): Promise<Array<ICourse> | null> => {
+    try {
+      
+      return await this.trainerrepository.getCourses(trainerid);
     } catch (error) {
       console.error("Error in fetching profile:", error);
       throw error;

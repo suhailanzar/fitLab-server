@@ -9,6 +9,7 @@ import { Otp } from '../models/userotp'
 import { paymentModel } from "../models/payment";
 import { startSession } from 'mongoose';
 import { Message } from "../models/Message";
+import { uploadS3Image } from "../utils/s3uploads";
 
 
 export class userRepository implements IuserRepository {
@@ -34,7 +35,6 @@ export class userRepository implements IuserRepository {
 
   otpchecked = async (value: number, email: string): Promise<{ isValid: boolean, isExpired: boolean }> => {
     try {
-      console.log('Entered the repository of otpCheck', value);
 
       const storedotp = await Otp.findOne({ email: email })
       console.log('stored otp is , ', storedotp);
@@ -71,12 +71,10 @@ export class userRepository implements IuserRepository {
       console.log("otp record is ", otpRecord, 'otp issss', OTP)
       try {
         if (otpRecord) {
-          console.log('entered otprecoed');
 
           otpRecord.otp = OTP;
           await otpRecord.save();
         } else {
-          console.log('entered else otprecored');
 
           const newOtpRecord = new Otp({ otp: OTP, email: email });
           await newOtpRecord.save();
@@ -102,14 +100,13 @@ export class userRepository implements IuserRepository {
   jwt = async (payload: User) => {
     try {
       const plainPayload = {
-        id:payload.id,
+        _id: payload.id,
         username: payload.username,
         email: payload.email,
         password: payload.password,
         isblocked: payload.isblocked,
       };
-      console.log('jwt token pauyload is',plainPayload);
-      
+
       const token = jwt.sign(plainPayload, process.env.SECRET_LOGIN as string, {
         expiresIn: "2h",
       });
@@ -124,14 +121,12 @@ export class userRepository implements IuserRepository {
 
   refreshToken = async (payload: User) => {
     try {
-      console.log("here the jwt ", payload);
       const plainPayload = {
         username: payload.username,
         email: payload.email,
         password: payload.password,
         isblocked: payload.isblocked,
       };
-      console.log("payload is", plainPayload);
       const token = jwt.sign(plainPayload, process.env.SECRET_LOGIN as string, {
         expiresIn: "10d",
       });
@@ -148,7 +143,6 @@ export class userRepository implements IuserRepository {
       const user = await UserModel.findOne({ email });
       if (user) {
         const isPasswordMatch = await bcrypt.compare(password, user.password);
-        console.log('is password matching ', isPasswordMatch);
 
         return isPasswordMatch;
       }
@@ -163,20 +157,16 @@ export class userRepository implements IuserRepository {
   findUser = async (email: string): Promise<User | null> => {
     try {
       const existingUserDocument = await UserModel.findOne({ email: email });
-      console.log("exisitng user is", existingUserDocument);
       if (!existingUserDocument) {
+        console.log('no user found');
+
         return null;
       }
-      const user = new User(
-        existingUserDocument.username,
-        existingUserDocument.email,
-        existingUserDocument.password,
-        existingUserDocument.isblocked,
-        existingUserDocument.id
 
-      );
-      console.log("usr from the findbyone in repo", user);
-      return user;
+      console.log('find user is login', existingUserDocument);
+
+
+      return existingUserDocument;
     } catch (error) {
       console.log("error", error);
       throw error;
@@ -209,29 +199,35 @@ export class userRepository implements IuserRepository {
   }
 
 
-  savepayment = async (paymentdetails:Payment): Promise<Array<string>> => {
+  bookslot = async (paymentdetails: Payment): Promise<Array<string>> => {
 
     const session = await startSession();
+
     session.startTransaction();
+
+
     try {
-      console.log('payment details from frontis ',paymentdetails);
-      
-      const user = await UserModel.findOne({email:paymentdetails.email});  
+
+      const user = await UserModel.findOne({ _id: paymentdetails.userid });
       if (!user) {
         return ['User not found'];
+
       }
-          
 
       const trainer = await trainerModel.findOneAndUpdate(
         { _id: paymentdetails.trainerid, 'availableslots._id': paymentdetails.slotid },
         {
           $set: {
             'availableslots.$.userid': user._id,
+            'availableslots.$.username': user.username,
             'availableslots.$.status': true
           }
         },
         { new: true } // Return the updated document
       );
+
+      console.log('updated trainer is ', trainer);
+
 
       const newPayment = new paymentModel({
         transactionId: paymentdetails.razorpayPaymentId,
@@ -242,17 +238,13 @@ export class userRepository implements IuserRepository {
         currency: paymentdetails.currency,
         paymentDate: new Date(),
       });
-      
 
-      console.log('trainer details for payment is ',trainer);
-      console.log('new updated payment is',newPayment);
+
       await newPayment.save({ session });
 
       await session.commitTransaction();
-      console.log('Payment and slot update successful');
 
-
-      return ["hshsh","hshsh"];
+      return ["payment successfull"];
 
     } catch (error) {
       console.log("error", error);
@@ -272,7 +264,7 @@ export class userRepository implements IuserRepository {
           { senderId: data.trainerid, receiverId: data.userid }
         ]
       }).sort({ timestamp: 1 });
-  
+
       if (messages.length > 0) {
         return messages;
       } else {
@@ -284,5 +276,112 @@ export class userRepository implements IuserRepository {
       throw error;
     }
   }
+
+
+
+  editprofile = async (data: User, id: string, s3Response: any): Promise<User | null> => {
+
+    try {
+
+      const existUser = await UserModel.findById(id);
+
+
+      if (!existUser) {
+        throw new Error('user not found');
+      }
+
+      const updatedData: any = {};
+
+      if (data.username) updatedData.username = data.username;
+      if (s3Response && s3Response.Location) updatedData.image = s3Response.Location;
+      if (data.place) updatedData.place = data.place;
+      if (data.age) updatedData.age = data.age;
+      if (data.createdat) updatedData.createdat = data.createdat;
+      if (data.weight) updatedData.weight = data.weight;
+      if (data.height) updatedData.height = data.height;
+      if (data.gender) updatedData.gender = data.gender;
+
+
+      console.log('updated data is ', updatedData);
+
+      const updatedUser = await UserModel.findOneAndUpdate(
+        { _id: id },
+        updatedData,
+        { new: true, upsert: true }
+      );
+
+      console.log('upadated user is', updatedUser);
+
+      if (!updatedUser) {
+        throw new Error('Failed to update trainer profile');
+      }
+
+      return updatedUser;
+    } catch (error) {
+      console.error("Error updating trainer profile:", error);
+      throw error;
+    }
+  }
+
+
+  getuserprofile = async (id: string): Promise<User | null> => {
+    try {
+      const existingUserDocument = await UserModel.findOne({ _id: id });
+      if (!existingUserDocument) {
+        console.log('no user found');
+
+        return null;
+      }
+
+      console.log('find user is login', existingUserDocument);
+
+      return existingUserDocument;
+    } catch (error) {
+      console.log("error", error);
+      throw error;
+    }
+  };
+
+
+  subscribe = async (paymentdetails: any, userid: string): Promise<Array<string>> => {
+
+    const session = await startSession();
+
+    session.startTransaction();
+
+
+    try {      
   
+      // Calculate subscription dates
+      const startDate = new Date();
+      const endDate = new Date();
+      endDate.setMonth(startDate.getMonth() + 1); 
+  
+      // Update user's subscription
+      const subscription: any = {
+        name: paymentdetails.planname, 
+        startDate,
+        endDate,
+        isActive: true
+      };
+  
+      await UserModel.updateOne(
+        { _id: userid },
+        { $set: { subscription } },
+        { session }
+      );
+  
+      await session.commitTransaction();
+      return ["Payment successful"];
+  
+    } catch (error) {
+      console.log("error", error);
+      throw error;
+    } finally {
+      session.endSession();
+    }
+  }
+
+
+
 }

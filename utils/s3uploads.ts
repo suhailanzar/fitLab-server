@@ -10,30 +10,30 @@ import { Upload } from "@aws-sdk/lib-storage";
     region: process.env.S3_REGION
 })
 
-// const uploadS3Video = async (file : any)=>{
-//     const params = {
-//         Bucket: process.env.S3_BUCKET,
-//         Key: Date.now().toString() + '-' + file.originalname,
-//         Body: file.buffer,
-//         ContentType: file.mimetype,
-//         ContentDisposition: 'inline'
-//     };
+const uploadS3Video = async (file : any,)=>{
+    const params = {
+        Bucket: process.env.S3_BUCKET_COURSES,
+        Key: Date.now().toString() + '-' + file.originalname,
+        Body: file.buffer,
+        ContentType: file.mimetype,
+        ContentDisposition: 'inline'
+    };
 
     
-//     console.log('uploading video: ', params)
-//     return new Upload({
-//         client : s3config,
-//         params : params
-//     }).done()
-//     .then(data => {
-//         console.log('data from bucket', data)
-//         return data
-//     })
-//     .catch(err =>{
-//         return {error : true, msg : err}
-//     })
+    console.log('uploading video: ', params)
+    return new Upload({
+        client : s3config,
+        params : params
+    }).done()
+    .then(data => {
+        console.log('data from bucket', data)
+        return data
+    })
+    .catch(err =>{
+        return {error : true, msg : err}
+    })
 
-// }
+}
 
 const uploadS3Image = async (file : any)=>{
     const params = {
@@ -62,7 +62,7 @@ const uploadS3Image = async (file : any)=>{
 
 const uploadS3ProfileImage = async (file : any)=>{
     const params = {
-        Bucket: process.env.S3_BUCKET_PROFILE_IMAGE,
+        Bucket: process.env.S3_BUCKET_PROFILE,
         Key: Date.now().toString() + '-' + file.originalname,
         Body: file.buffer,
         ContentType: file.mimetype,
@@ -86,4 +86,4 @@ const uploadS3ProfileImage = async (file : any)=>{
 }
 
 
-export {uploadS3Image, uploadS3ProfileImage}
+export {uploadS3Image, uploadS3ProfileImage, uploadS3Video}

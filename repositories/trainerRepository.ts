@@ -1,18 +1,15 @@
 import { ItrainerRepository } from "../interfaces/ItrainerRepository";
-import { IuserInteractor } from "../interfaces/Iuserinteractor";
-import { Response, Request, NextFunction } from "express";
-import { Slot, Trainer } from "../entities/Trainer";
+import { ICourse, Slot, Trainer } from "../entities/Trainer";
 import { trainerModel } from "../models/trainerModel";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { generateOTP, sendOtpEmail } from '../services/nodemailer'
-import dotenv from "dotenv";
-import nodemailer from "nodemailer";
-import crypto from "crypto";
 import { Otp } from '../models/userotp'
 import { uploadS3Image } from "../utils/s3uploads";
 import { User } from "../entities/user";
 import { UserModel } from "../models/userModel";
+import Course from "../models/courses";
+import { ObjectId } from "mongoose";
 
 export class trainerRepository implements ItrainerRepository {
   // private _jwtotp: String | null = null;
@@ -27,7 +24,6 @@ export class trainerRepository implements ItrainerRepository {
 
   Registertrainer = async (datas: Trainer): Promise<Trainer | null> => {
     try {
-      console.log('treinaer detailas arere wer', datas);
 
       const newUser = new trainerModel(datas);
       const updated = await newUser.save();
@@ -42,7 +38,6 @@ export class trainerRepository implements ItrainerRepository {
 
   otpchecked = async (value: number, email: string): Promise<{ isValid: boolean, isExpired: boolean }> => {
     try {
-      console.log('Entered the repository of otpCheck', value);
 
       const storedotp = await Otp.findOne({ email: email })
       console.log('stored otp is , ', storedotp);
@@ -79,12 +74,10 @@ export class trainerRepository implements ItrainerRepository {
       console.log("otp record is ", otpRecord, 'otp issss', OTP)
       try {
         if (otpRecord) {
-          console.log('entered otprecoed');
 
           otpRecord.otp = OTP;
           await otpRecord.save();
         } else {
-          console.log('entered else otprecored');
 
           const newOtpRecord = new Otp({ otp: OTP, email: email });
           await newOtpRecord.save();
@@ -118,7 +111,6 @@ export class trainerRepository implements ItrainerRepository {
         isblocked: payload.isblocked,
       };
 
-      console.log('planpayload is ', plainPayload);
 
       const token = jwt.sign(plainPayload, process.env.SECRET_LOGIN as string, {
         expiresIn: "2h",
@@ -134,14 +126,12 @@ export class trainerRepository implements ItrainerRepository {
 
   refreshToken = async (payload: Trainer) => {
     try {
-      console.log("here the jwt ", payload);
       const plainPayload = {
         username: payload.trainername,
         email: payload.email,
         password: payload.password,
         isblocked: payload.isblocked,
       };
-      console.log("payload is", plainPayload);
       const token = jwt.sign(plainPayload, process.env.SECRET_LOGIN as string, {
         expiresIn: "10d",
       });
@@ -198,8 +188,8 @@ export class trainerRepository implements ItrainerRepository {
         { new: true, upsert: true }
       );
 
-       console.log('upadated trainer is', updatedTrainer);
-       
+      // console.log('upadated trainer is', updatedTrainer);
+
       if (!updatedTrainer) {
         throw new Error('Failed to update trainer profile');
       }
@@ -218,7 +208,6 @@ export class trainerRepository implements ItrainerRepository {
   findtrainer = async (email: string): Promise<Trainer | null> => {
     try {
       const existingUserDocument = await trainerModel.findOne({ email: email });
-      console.log("exisitng user is", existingUserDocument);
       if (!existingUserDocument) {
         return null;
       }
@@ -252,8 +241,6 @@ export class trainerRepository implements ItrainerRepository {
         return null;
       }
 
-      console.log('existing user in getprofile is ', existingUser);
-
       const trainer = new Trainer(
         existingUser.trainername,
         existingUser.email,
@@ -279,34 +266,34 @@ export class trainerRepository implements ItrainerRepository {
 
 
 
-  addslot = async (id: string , slot:Slot): Promise< string | null> => {
+  addslot = async (id: string, slot: Slot): Promise<Slot | null> => {
     try {
       const existingUser = await trainerModel.findOne({ _id: id });
-  
+
       if (!existingUser) {
         return null;
       }
-  
-  
-      const slotToAdd: Slot = {
 
-        userid:null,
+
+      const slotToAdd: Slot = {
+        userid: null,
+        username: null,
         date: slot.date,
         startTime: slot.startTime,
-        price:slot.price,
-        status:false
-
+        price: slot.price,
+        status: false,
+        id: ""
       };
-  
+
       // Add the new slot to the existing available slots
       existingUser.availableslots.push(slotToAdd);
-  
+
       // Update the trainer document in the database
       await trainerModel.updateOne({ _id: id }, { availableslots: existingUser.availableslots });
-  
-      return "added slot successfully";
-  
-  
+
+      return slotToAdd
+
+
     } catch (error) {
       console.error("Error adding slot to trainer profile:", error);
       throw error;
@@ -322,8 +309,6 @@ export class trainerRepository implements ItrainerRepository {
         return null;
       }
 
-      console.log('existing user in getprofile is ', existingUser);
-
       const trainer = new Trainer(
         existingUser.trainername,
         existingUser.email,
@@ -347,24 +332,184 @@ export class trainerRepository implements ItrainerRepository {
     }
   };
 
-  
+
   getclients = async (): Promise<Array<User> | null> => {
 
     try {
-      const users = await UserModel.find({}) 
+      const users = await UserModel.find({})
       if (!users) {
-       return null
+        return null
       }
       return users
-    
+
     } catch (error) {
       console.error('fetching users failed', error);
       return null;
     }
-   
+
+  }
+
+   getbookings = async (trainerid: string): Promise<Array<Slot> | string> => {
+    try {
+      
+      console.log('trainr id is ',trainerid);
+
+
+      const trainer = await trainerModel.findById(trainerid).lean();
+      console.log("trainer si repo soifhfsj",trainer);
+
+      
+      const bookedSlots = await trainerModel.aggregate([
+        {
+          $match: {
+            _id: trainerid
+          }
+        },
+        {
+          $unwind: "$availableslots"
+        },
+        {
+          $match: {
+            "availableslots.status": true
+          }
+        },
+        {
+          $group: {
+            _id: "$_id",
+            slots: { $push: "$availableslots" }
+          }
+        }
+      ]);
+
+      console.log('booking slots in repos is',bookedSlots);
+      
+  
+      if (!bookedSlots || bookedSlots.length === 0) {
+        return "null";
+      }
+  
+      return bookedSlots;
+    } catch (error) {
+      console.error('Fetching bookings failed', error);
+      return 'entered catch block';
+    }
+  };
+
+  editSlot = async (trainerid: string, slotid: string, slotData: Slot): Promise<Slot | null> => {
+    try {
+      
+
+      const trainer = await trainerModel.findById(trainerid);
+      console.log('trainer is ',trainer);
+      
+      
+      if (!trainer) return null;
+  
+      const updateResult = await trainerModel.updateOne(
+        { _id: trainerid, 'availableslots._id': slotid },
+        {
+          $set: {
+            'availableslots.$.date': slotData.date,
+            'availableslots.$.startTime': slotData.startTime,
+            'availableslots.$.price': slotData.price
+          }
+        }
+      );
+      
+
+      console.log('updated result is ',updateResult);
+      
+  
+      if (!updateResult) {
+        return null;
+      }
+  
+      const updatedTrainer = await trainerModel.findById(trainerid);
+      if (!updatedTrainer) return null;
+  
+      const updatedSlot = updatedTrainer.availableslots.find(slot => slot.id.toString() === slotid);
+      
+      if (!updatedSlot) return null;
+  
+      const result: Slot = {
+        date: updatedSlot.date,
+        startTime: updatedSlot.startTime,
+        price: updatedSlot.price,
+        userid: null,
+        username: null,
+        status: false,
+        id:slotid
+      };
+  
+      return result;
+  
+    } catch (error) {
+      console.error('Updating slot failed', error);
+      return null;
+    }
+  };
+
+
+  
+  
+  addCourse = async (CourseDetails:ICourse): Promise<string | null> => {
+
+    try {
+
+      console.log("course details are ",CourseDetails)
+      const newCourse = new Course(CourseDetails);
+      console.log('new course is',newCourse);
+
+    const savedCourse = await newCourse.save();
+
+    if(savedCourse){
+      return "success"
+    }else{
+      return null
+    }
+
+    } catch (error) {
+      console.error('fetching users failed', error);
+      return null;
+    }
+
   }
 
 
+  getCourses = async (trainerid: ObjectId): Promise<Array<ICourse> | null> => {
+    try {
+      const availableCourses = await Course.find({ trainerId:trainerid });
+  
+      if (!availableCourses || availableCourses.length === 0) {
+        return [];
+      }
 
+      console.log('available corses are',availableCourses);
+      
+
+      const courses =  availableCourses.map(course => ({
+        _id: course._id,
+        author: course.author,
+        courseName: course.courseName,
+        description: course.description,
+        modules: course.modules.map(module => ({
+          name: module.moduleName,
+          description: module.moduleDescription,
+          videoUrl:module.videoUrl
+        })),
+        price: course.price,
+        trainerId: course.trainerId,
+        createdAt: course.createdAt,
+        updatedAt: course.updatedAt
+      }));
+
+      return courses
+  
+  
+    } catch (error) {
+      console.error('fetching courses failed', error);
+      return [];
+    }
+  }
 
 }

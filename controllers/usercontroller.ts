@@ -2,12 +2,12 @@ import { Response, Request, NextFunction } from "express";
 import { ResponseStatus } from "../constants/statusCodes";
 import { isValidEmail } from "../validations/emailValidation";
 import { isValidPassword } from "../validations/passwordValidations";
-import { userInteractor } from "../interactors/userInteractor";
 import { IuserInteractor } from "../interfaces/Iuserinteractor";
 import { User } from "../entities/user";
 import bcrypt from "bcryptjs";
 import { sign } from "jsonwebtoken";
 import { AUTH_ERRORS } from "../constants/errorHandling"
+import { uploadS3Image, uploadS3ProfileImage } from "../utils/s3uploads";
 
 export class userController {
   private userdatas!: User;
@@ -64,8 +64,10 @@ export class userController {
 
 
         const userdata = await this.Interactor.findUser(user.email);
-        
 
+        console.log('user data is ',userdata);
+        
+        
         if (userdata) {
           if (userdata.isblocked) {
             return res
@@ -263,7 +265,7 @@ export class userController {
   }
 
 
-  savepayment = async (req: Request, res: Response, next: NextFunction) => {
+  bookslot = async (req: Request, res: Response, next: NextFunction) => {
     try {
 
       if (!req.body) {
@@ -275,12 +277,55 @@ export class userController {
       const paymentdetails = req.body
       console.log('dataform paymentis ',paymentdetails);
       
-      const results = await this.Interactor.savepayment(paymentdetails);
+      const results = await this.Interactor.bookslot(paymentdetails);
       res.json(results);
 
  
     } catch (error) {
       console.log('enterd catch block');
+      next(error);
+    }
+
+  }
+
+
+  editprofile = async (req: Request, res: Response, next: NextFunction) => {
+    try {     
+      
+      const id = typeof req.user_id === 'string' ? req.user_id : '';
+    
+      let profilePic = req.file as Express.Multer.File;
+      console.log('profile picture is ',profilePic);
+      
+      let s3Response: any = {};
+  
+      if (profilePic) {
+        s3Response = await uploadS3ProfileImage(profilePic);
+        if (!s3Response.error) {
+          console.log('url of the image from the s3 bucket', s3Response.Location);
+        } else {
+          console.log('error in uploading image to cloud');
+          return res.status(ResponseStatus.BadRequest).json({ message: "Error uploading image" });
+        }
+      }
+      
+      console.log('image in controller is', profilePic);
+      
+      if (!id) {
+        return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.TOKEN_INVALID.message });
+      }
+  
+      const updatedData = req.body;
+      const updatedDetails = await this.Interactor.editprofile(updatedData, id, s3Response);
+  
+      if (updatedDetails) {
+        return res.status(ResponseStatus.Accepted).json({ message: AUTH_ERRORS.UPDATED.message ,profile:updatedDetails});
+      }
+      
+      return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.REGISTER_FAILED.message });
+  
+    } catch (error) {
+      console.log('Entered catch block of edit profile trainuserer');
       next(error);
     }
 
@@ -318,5 +363,64 @@ export class userController {
         .json({ message: 'An error occurred while processing the request' });
     }
   };
+
+
+  
+  getprofile = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+
+      const id = typeof req.user_id === 'string' ? req.user_id : '';
+      console.log('id is',id);
+      
+
+      const userprofile = await this.Interactor.getuserprofile(id)
+
+      if (userprofile) {
+        console.log('userprofile is ',userprofile);
+        
+        return res
+          .status(ResponseStatus.Accepted)
+          .json({ message: AUTH_ERRORS.FETCH_SUCCESS.message, profile: userprofile })
+      }
+      return res
+        .status(ResponseStatus.NotFound)
+        .json({ message: AUTH_ERRORS.USER_NOT_FOUND.message })
+
+
+
+    } catch (error) {
+      console.log('enterd catch block');
+      next(error);
+    }
+
+  }
+
+
+  subscribe = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+
+      if (!req.body) {
+        return res
+          .status(ResponseStatus.BadRequest)
+          .json({ message: AUTH_ERRORS.NO_DATA.message });
+      }
+
+      const id = typeof req.user_id === 'string' ? req.user_id : '';
+      console.log('id is',id);
+    
+      const paymentdetails = req.body
+      console.log('dataform paymentis ',paymentdetails);
+      
+      const results = await this.Interactor.subscribe(paymentdetails,id);
+      if(!results)  return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.REGISTER_FAILED.message });
+      res.json(results);
+
+ 
+    } catch (error) {
+      console.log('enterd catch block');
+      next(error);
+    }
+
+  }
 
 }

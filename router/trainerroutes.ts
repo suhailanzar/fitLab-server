@@ -3,7 +3,7 @@ import { trainerRepository } from '../repositories/trainerRepository';
 import { trainerInteractor } from '../interactors/trainerinteractor';
 import { trainerController } from '../controllers/trainercontroller';
 import  authenticateTrainerToken  from '../middlewares/trainer_authmiddleware';
-import { trainerpofileupload } from '../utils/multer';
+import { trainerpofileupload,videoupload } from '../utils/multer';
 
 const router = Router();
 
@@ -24,8 +24,12 @@ router.post('/resendOtp',controller.resendOtp.bind(controller))
 router.patch('/editProfile',authenticateTrainerToken,trainerpofileupload.single('image'),controller.editProfileTrainer.bind(controller))
 router.get('/getprofile',authenticateTrainerToken,controller.getprofile.bind(controller))
 router.post('/addslot',authenticateTrainerToken,controller.addslot.bind(controller))
+router.post('/editSlot',authenticateTrainerToken,controller.editSlot.bind(controller))
 router.get('/getslots',authenticateTrainerToken,controller.getslots.bind(controller))
 router.get('/clients',authenticateTrainerToken,controller.getclients.bind(controller))
+router.get('/getbookings',authenticateTrainerToken,controller.getbookings.bind(controller))
+router.get('/getCourses',authenticateTrainerToken,controller.getCourses.bind(controller))
+router.post('/addCourse',authenticateTrainerToken,videoupload.any(),controller.addCourse.bind(controller))
 
 
 
