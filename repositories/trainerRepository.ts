@@ -1,5 +1,5 @@
 import { ItrainerRepository } from "../interfaces/ItrainerRepository";
-import { ICourse, Slot, Trainer } from "../entities/Trainer";
+import { ICourse, IPayment, Slot, Trainer } from "../entities/Trainer";
 import { trainerModel } from "../models/trainerModel";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -9,7 +9,9 @@ import { uploadS3Image } from "../utils/s3uploads";
 import { User } from "../entities/user";
 import { UserModel } from "../models/userModel";
 import Course from "../models/courses";
-import { ObjectId } from "mongoose";
+import mongoose, { ObjectId, Types } from "mongoose";
+import { paymentModel } from "../models/payment";
+
 
 export class trainerRepository implements ItrainerRepository {
   // private _jwtotp: String | null = null;
@@ -349,16 +351,16 @@ export class trainerRepository implements ItrainerRepository {
 
   }
 
-   getbookings = async (trainerid: string): Promise<Array<Slot> | string> => {
+  getbookings = async (trainerid: string): Promise<Array<Slot> | string> => {
     try {
-      
-      console.log('trainr id is ',trainerid);
+
+      console.log('trainr id is ', trainerid);
 
 
       const trainer = await trainerModel.findById(trainerid).lean();
-      console.log("trainer si repo soifhfsj",trainer);
+      console.log("trainer si repo soifhfsj", trainer);
 
-      
+
       const bookedSlots = await trainerModel.aggregate([
         {
           $match: {
@@ -381,13 +383,13 @@ export class trainerRepository implements ItrainerRepository {
         }
       ]);
 
-      console.log('booking slots in repos is',bookedSlots);
-      
-  
+      console.log('booking slots in repos is', bookedSlots);
+
+
       if (!bookedSlots || bookedSlots.length === 0) {
         return "null";
       }
-  
+
       return bookedSlots;
     } catch (error) {
       console.error('Fetching bookings failed', error);
@@ -397,14 +399,14 @@ export class trainerRepository implements ItrainerRepository {
 
   editSlot = async (trainerid: string, slotid: string, slotData: Slot): Promise<Slot | null> => {
     try {
-      
+
 
       const trainer = await trainerModel.findById(trainerid);
-      console.log('trainer is ',trainer);
-      
-      
+      console.log('trainer is ', trainer);
+
+
       if (!trainer) return null;
-  
+
       const updateResult = await trainerModel.updateOne(
         { _id: trainerid, 'availableslots._id': slotid },
         {
@@ -415,22 +417,22 @@ export class trainerRepository implements ItrainerRepository {
           }
         }
       );
-      
 
-      console.log('updated result is ',updateResult);
-      
-  
+
+      console.log('updated result is ', updateResult);
+
+
       if (!updateResult) {
         return null;
       }
-  
+
       const updatedTrainer = await trainerModel.findById(trainerid);
       if (!updatedTrainer) return null;
-  
+
       const updatedSlot = updatedTrainer.availableslots.find(slot => slot.id.toString() === slotid);
-      
+
       if (!updatedSlot) return null;
-  
+
       const result: Slot = {
         date: updatedSlot.date,
         startTime: updatedSlot.startTime,
@@ -438,11 +440,11 @@ export class trainerRepository implements ItrainerRepository {
         userid: null,
         username: null,
         status: false,
-        id:slotid
+        id: slotid
       };
-  
+
       return result;
-  
+
     } catch (error) {
       console.error('Updating slot failed', error);
       return null;
@@ -450,23 +452,23 @@ export class trainerRepository implements ItrainerRepository {
   };
 
 
-  
-  
-  addCourse = async (CourseDetails:ICourse): Promise<string | null> => {
+
+
+  addCourse = async (CourseDetails: ICourse): Promise<string | null> => {
 
     try {
 
-      console.log("course details are ",CourseDetails)
+      console.log("course details are ", CourseDetails)
       const newCourse = new Course(CourseDetails);
-      console.log('new course is',newCourse);
+      console.log('new course is', newCourse);
 
-    const savedCourse = await newCourse.save();
+      const savedCourse = await newCourse.save();
 
-    if(savedCourse){
-      return "success"
-    }else{
-      return null
-    }
+      if (savedCourse) {
+        return "success"
+      } else {
+        return null
+      }
 
     } catch (error) {
       console.error('fetching users failed', error);
@@ -475,41 +477,82 @@ export class trainerRepository implements ItrainerRepository {
 
   }
 
-
-  getCourses = async (trainerid: ObjectId): Promise<Array<ICourse> | null> => {
+  getCourses = async (trainerId: ObjectId): Promise<Array<ICourse> | null> => {
     try {
-      const availableCourses = await Course.find({ trainerId:trainerid });
-  
+      const availableCourses = await Course.find({ trainerId }).lean().exec();
+
       if (!availableCourses || availableCourses.length === 0) {
         return [];
       }
 
-      console.log('available corses are',availableCourses);
-      
+      console.log('available courses are', availableCourses);
 
-      const courses =  availableCourses.map(course => ({
-        _id: course._id,
+      const courses = availableCourses.map((course: any) => ({
         author: course.author,
         courseName: course.courseName,
         description: course.description,
-        modules: course.modules.map(module => ({
+        modules: course.modules.map((module: any) => ({
           name: module.moduleName,
           description: module.moduleDescription,
-          videoUrl:module.videoUrl
+          videoUrl: module.videoUrl,
         })),
-        price: course.price,
+        Price: course.Price,
         trainerId: course.trainerId,
         createdAt: course.createdAt,
-        updatedAt: course.updatedAt
+        updatedAt: course.updatedAt,
+        id: course._id.toString(), // Convert ObjectId to string
       }));
 
-      return courses
-  
-  
+      return courses;
     } catch (error) {
       console.error('fetching courses failed', error);
       return [];
     }
-  }
+  };
 
+  revenueData = async (trainerId: string): Promise<Array<IPayment> | null> => {
+    try {
+
+      console.log('trainer id is', trainerId);
+    
+      let objectId: Types.ObjectId;
+      try {
+        objectId = new Types.ObjectId(trainerId);
+      } catch (e) {
+        console.error('Invalid trainerId format:', trainerId);
+        return null;
+      }
+
+      console.log('object id is',objectId);
+      
+  
+      const revenueData = await paymentModel.find({ trainerId: objectId });
+  
+      console.log('revenue data', revenueData);
+
+
+      const paymentRevenue: IPayment[] = revenueData.map((payment: IPayment) => ({
+        transactionId: payment.transactionId,
+        userId: payment.userId,
+        amount: payment.amount,
+        currency: payment.currency,
+        paymentMethod: payment.paymentMethod,
+        paymentType: payment.paymentType,
+        paymentDate: payment.paymentDate,
+        createdAt: payment.createdAt,
+        trainerId: payment.trainerId,
+        slotId: payment.slotId,
+        courseId: payment.courseId,
+        id: payment.id,
+      }));
+
+
+      return paymentRevenue;
+
+
+    } catch (error) {
+      console.error('Fetching Revenue failed', error);
+      return null; // Return null to indicate failure to fetch data
+    }
+  };
 }

@@ -30,6 +30,8 @@ interface AuthErrors {
     UPLOAD_FAILED:AuthError
     UPDATION_FAILED:AuthError
     UPDATION_SUCCESS:AuthError
+    PAYMENT_SUCCESS:AuthError
+    PAYMENT_FAILED:AuthError
 }
 
 const AUTH_ERRORS: AuthErrors = {
@@ -110,6 +112,14 @@ const AUTH_ERRORS: AuthErrors = {
     },
     UPDATION_SUCCESS:{
         message:"Succesfully updated"
+
+    },
+    PAYMENT_SUCCESS:{
+        message:"payment successfull and saved"
+
+    },
+    PAYMENT_FAILED:{
+        message:"payment failed "
 
     }
 

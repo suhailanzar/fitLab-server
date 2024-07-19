@@ -26,11 +26,15 @@ router.post('/bookslot',authenticateUserToken,controller.bookslot.bind(controlle
 router.post("/getMessages",authenticateUserToken,controller.getMessages.bind(controller))
 router.post("/editprofile",authenticateUserToken,userpofileupload.single('image'),controller.editprofile.bind(controller))
 router.post("/subscribe",authenticateUserToken,controller.subscribe.bind(controller))
-
+router.post("/saveCourse",authenticateUserToken,controller.saveCourse.bind(controller))
 
 router.get("/gettrainers",authenticateUserToken,controller.getTrainers.bind(controller))
 router.get("/searchtrainers",authenticateUserToken,controller.searchtrainers.bind(controller))
 router.get("/getprofile",authenticateUserToken,controller.getprofile.bind(controller))
+router.get("/getCourse",authenticateUserToken,controller.getCourse.bind(controller))
+router.get("/getCourseDetails/:id",authenticateUserToken,controller.getCourseDetails.bind(controller))
+router.get("/getPurchasedCourses",authenticateUserToken,controller.getPurchasedCourses.bind(controller))
+
 
 
 router.get('/activate', (req: Request, res: Response) => {

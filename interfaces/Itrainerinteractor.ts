@@ -1,5 +1,5 @@
 import { ObjectId } from "mongoose";
-import { ICourse, Slot, Trainer } from "../entities/Trainer";
+import { ICourse, IPayment, Slot, Trainer } from "../entities/Trainer";
 import { User } from "../entities/user";
 
 export interface ItrainerInteractor {
@@ -20,6 +20,6 @@ export interface ItrainerInteractor {
   editSlot(trainerid:string,slotid:string,data:Slot): Promise<Slot | null>;
   addCourse(CourseDetails:ICourse): Promise<string | null>;
   getCourses(trainerid:ObjectId): Promise<Array<ICourse> | null>;
-
+  revenueData(trainerId: string): Promise<Array<IPayment> | null> 
 
 }

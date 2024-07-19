@@ -1,7 +1,7 @@
 import express from  'express';
 import cors from  'cors';
-import bodyparser from 'body-parser'
 import Session  from 'express-session';
+import path from 'path';
 
 
 const app = express();
@@ -23,6 +23,8 @@ const corsoptions = {
 app.use(express.json({limit: '50mb'}));
 app.use(cors(corsoptions))
 app.use(express.urlencoded({limit: '50mb', extended: true}));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 
 
 export default app;

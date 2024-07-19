@@ -515,6 +515,32 @@ getCourses = async (req: Request, res: Response, next: NextFunction) => {
   }
 }
 
+getRevenueData = async (req: Request, res: Response, next: NextFunction) => {
+  try {  
+    const trainerId = typeof req.user_id === 'string' ? req.user_id : '';
+
+    console.log('traien id string in controlleris',trainerId);
+    
+
+    if (!trainerId) {
+      return res.status(ResponseStatus.BadRequest).json({ message: 'Trainer ID is undefined' });
+    }
+
+
+    const revenueData = await this.Interactor.revenueData(trainerId);
+
+    if (revenueData) {
+      return res.status(ResponseStatus.Accepted).json({ message: AUTH_ERRORS.FETCH_SUCCESS.message, revenueData });
+    }
+    
+    return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.NO_DATA.message });
+
+  } catch (error) {
+    console.log('Entered catch block of getCourses');
+    next(error);
+  }
+}
+
 
 
 

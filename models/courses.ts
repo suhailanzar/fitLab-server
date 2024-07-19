@@ -4,6 +4,7 @@ interface IModule {
     moduleName: string;
     moduleDescription: string;
     videoUrl: string;
+    _id: string;
 }
 
 interface ICourse extends Document {
@@ -11,7 +12,7 @@ interface ICourse extends Document {
     courseName: string;
     description: string;
     modules: IModule[];
-    price: number;
+    Price: number;
     trainerId: mongoose.Schema.Types.ObjectId;
     createdAt: Date;
     updatedAt: Date;

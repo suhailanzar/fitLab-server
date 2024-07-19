@@ -42,6 +42,7 @@ export class IModule {
         public readonly name: string,
         public readonly description: string,
         public readonly videoUrl: string,
+        public readonly id: string,
 ){
 
 }
@@ -54,11 +55,36 @@ export class ICourse {
         public readonly courseName: string,
         public readonly description: string,
         public readonly modules: IModule[],
-        public readonly price: number,
+        public readonly Price: number,
         public readonly trainerId: ObjectId,
         public readonly createdAt: Date,
         public readonly updatedAt: Date,
-){
+        public readonly id :string
 
+){
 }
 }
+
+export class IPayment  {
+  
+    constructor(
+
+        public readonly transactionId: string,
+        public readonly userId:ObjectId,
+        public readonly amount: number,
+        public readonly currency: string,
+        public readonly paymentMethod: string,
+        public readonly paymentType: 'slotBooking' | 'coursePurchase',
+        public readonly paymentDate: Date,
+        public readonly createdAt: Date,
+        public readonly trainerId?:ObjectId,
+        public readonly slotId?:ObjectId,
+        public readonly courseId?:ObjectId,
+        public readonly id?:ObjectId
+
+      
+    ) {
+    }
+  }
+
+

@@ -1,8 +1,10 @@
-import { Payment, User } from "../entities/user";
+import { coursePayment, Payment, User } from "../entities/user";
 import { IuserInteractor } from "../interfaces/Iuserinteractor";
 import { IuserRepository } from "../interfaces/IuserRepository";
 import Jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import { ObjectId } from "mongoose";
+import { ICourse } from "../entities/Trainer";
 
 dotenv.config();
 
@@ -181,6 +183,49 @@ export class userInteractor implements IuserInteractor {
       throw error;
     }
   };
+
+  getCourse =(page:number,limit:number):Promise<any> =>{
+    try {
+      return this.userRepository.getCourse(page,limit)
+     } catch (error) {
+      console.error("Error in getcourse:", error);
+      throw error;
+    }
+  }
+
+  getPurchasedCourses =(userId:string):Promise<{Enrolled:any,courses:any}> =>{
+    try {
+      return this.userRepository.getPurchasedCourses(userId)
+     } catch (error) {
+      console.error("Error in purchaesed course:", error);
+      throw error;
+    }
+  }
+
+
+  getCoursedetails =(id:string):Promise<ICourse | null> =>{
+    try {
+      return this.userRepository.getCoursedetails(id)
+     } catch (error) {
+      console.error("Error in getcourse details", error);
+      throw error;
+    }
+  }
+
+
+  saveCourse =(paymentDetails:coursePayment , userId:string):Promise<string | null> =>{
+    try {
+      return this.userRepository.saveCourse(paymentDetails,userId)
+     } catch (error) {
+      console.error("Error in saving course payment", error);
+      throw error;
+    }
+  }
+
+
+  
+
+  
 
 
 

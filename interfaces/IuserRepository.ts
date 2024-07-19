@@ -1,5 +1,6 @@
-import { Trainer } from "../entities/Trainer";
-import { Payment, User } from "../entities/user";
+import { ObjectId } from "mongoose";
+import { ICourse, Trainer } from "../entities/Trainer";
+import { coursePayment, Payment, User } from "../entities/user";
 export interface IuserRepository {
   findUser(email: string): Promise<User | null>;
   refreshToken(payload: User): Promise<string>;
@@ -16,6 +17,10 @@ export interface IuserRepository {
   editprofile(data:User, id:string,image:any): Promise<User | null> 
   getuserprofile(id: string): Promise<User | null>;
   subscribe(datas:any,userid:string): Promise<Array<any>>
+  getCourse(page:number,limit:number): Promise<any>
+  getCoursedetails(id:string): Promise<ICourse | null>
+  saveCourse(paymentDetails: coursePayment, userId: string): Promise<string | null>
+  getPurchasedCourses(userId:string):Promise<{Enrolled:any,courses:any}> 
 
 
 }

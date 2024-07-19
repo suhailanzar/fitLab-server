@@ -32,7 +32,7 @@ const authenticateTrainerToken = async (req: Request, res: Response, next: NextF
 
         jwt.verify(token, secret, async (err: VerifyErrors | null, decoded: User | any) => {
             if (err) {
-                return res.status(401).json({ message: "Invalid token" });
+                return res.status(401).json({ message: "Invalid token " });
             }
 
             const trainer = await trainerModel.findById(decoded._id);

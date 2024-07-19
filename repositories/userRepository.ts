@@ -1,15 +1,21 @@
 import { IuserRepository } from "../interfaces/IuserRepository";
-import { Payment, User } from "../entities/user";
+import { coursePayment, enrolledCourse, Payment, User } from "../entities/user";
 import { UserModel } from "../models/userModel";
 import { trainerModel } from "../models/trainerModel";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { generateOTP, sendOtpEmail } from '../services/nodemailer'
 import { Otp } from '../models/userotp'
-import { paymentModel } from "../models/payment";
-import { startSession } from 'mongoose';
+import { PaymentDocument, paymentModel } from "../models/payment";
+import mongoose, { ObjectId, startSession } from 'mongoose';
 import { Message } from "../models/Message";
 import { uploadS3Image } from "../utils/s3uploads";
+import Course from "../models/courses";
+import { ICourse, IModule } from "../entities/Trainer";
+import { response } from "express";
+import EnrolledCourse from "../models/purchasedCourses";
+
+
 
 
 export class userRepository implements IuserRepository {
@@ -236,6 +242,8 @@ export class userRepository implements IuserRepository {
         slotId: paymentdetails.slotid,
         amount: paymentdetails.amount / 100,
         currency: paymentdetails.currency,
+        paymentMethod:"razorPay",
+        paymentType:"slotBooking",
         paymentDate: new Date(),
       });
 
@@ -382,6 +390,148 @@ export class userRepository implements IuserRepository {
     }
   }
 
+  getCourse = async (page:number,limit:number): Promise<{ courses: any[], totalCourses: number }> => {
+    const skip = (page - 1) * limit;
+
+    try {
+    
+       const courses = await Course.find().skip(skip).limit(limit);
+      const totalCourses = await Course.countDocuments();
+      return { courses, totalCourses };
+      } catch (error) {
+        console.error(error);
+        throw new Error('Error fetching courses');
+      }
+ }
+
+  getCoursedetails = async (id: string): Promise<ICourse | null> => {
+  try {
+    console.log('id in gecourse is',id);
+    
+    const course = await Course.findOne({ _id: id })
+
+    if (!course) {
+      return null;
+    }
+
+    console.log('course in repo is',course);
+    
+
+    const modules: IModule[] = course.modules.map((module: any) => ({
+      name: module.moduleName,
+      description: module.moduleDescription,
+      videoUrl:module.videoUrl,
+      id:module.id
+    }));
+
+    const courseDetails: ICourse = {
+      author: course.author,
+      courseName: course.courseName,
+      description: course.description,
+      modules: modules,
+      Price: course.Price,
+      trainerId: course.trainerId,
+      createdAt: course.createdAt,
+      updatedAt: course.updatedAt,
+      id: id
+    };
+
+    return courseDetails;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+};
+
+
+saveCourse = async (paymentDetails: coursePayment, userId: string): Promise<string | null> => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+
+    console.log('payment detial ins te save course are',paymentDetails);
+    
+    // Create an instance of the Payment model
+    const paymentData = new paymentModel({
+      transactionId: paymentDetails.razorpayPaymentId,
+      userId: userId,
+      trainerId:paymentDetails.trainerId, 
+      courseId:paymentDetails.courseId,
+      amount: paymentDetails.amount,
+      currency: paymentDetails.currency,
+      paymentMethod: 'razorpay',
+      paymentType: 'coursePurchase',
+      paymentDate: new Date(),
+      createdAt: new Date(),
+    });
+
+    // Save the payment data
+    await paymentData.save({ session });
+
+    // Update the user's document to add the purchased course
+    await UserModel.findByIdAndUpdate(
+      userId,
+      { $push: { courses: new mongoose.Types.ObjectId(paymentDetails.courseId) } },
+      { new: true, session }
+    );
+
+    const course = await Course.findById(paymentDetails.courseId);
+        if (!course) {
+            throw new Error('Course not found');
+        }
+
+
+    const enrolledModules = course.modules.map((module) => ({
+      moduleId: module._id,
+      completed: false,
+  }));
+
+  // Create and save the enrolled course
+  const enrolledCourse = new EnrolledCourse({
+      userId,
+      courseId: paymentDetails.courseId,
+      enrolledAt: new Date(),
+      completed: false,
+      modules: enrolledModules,
+  });
+
+  await enrolledCourse.save();
+
+
+
+    // Commit the transaction
+    await session.commitTransaction();
+    session.endSession();
+
+    return 'Course purchase successful';
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    console.error(error);
+    return null;
+  }
+};
+
+
+getPurchasedCourses = async (userId: string): Promise<{ Enrolled: any, courses: any }> => {
+  try {
+    // Find all enrolled courses for the user
+    const enrolledCourses = await EnrolledCourse.find({ userId });
+
+    // Collect courseIds from enrolled courses
+    const courseIds = enrolledCourses.map(enrolledCourse => enrolledCourse.courseId);
+
+    // Find all courses corresponding to the collected courseIds
+    const courses = await Course.find({ _id: { $in: courseIds } });
+
+    return { Enrolled: enrolledCourses, courses };
+
+  } catch (error) {
+    console.error('Error in getPurchasedCourses:', error);
+    throw error; // Re-throw the error to be handled by the caller
+  }
+};
 
 
 }

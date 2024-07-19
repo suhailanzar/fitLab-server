@@ -93,7 +93,7 @@ export class adminController {
     }
     
     }
-
+   
 
 
     trainerApproval = async (req: Request, res: Response, next: NextFunction) => {
@@ -141,6 +141,59 @@ export class adminController {
     }
 
 
+    addmeal = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if(!req.body){
+        return res 
+        .status(ResponseStatus.BadRequest)
+        .json({ message: AUTH_ERRORS.NO_DATA.message })
+      }
+
+      const mealimage = req.file       
+
+      const meals = req.body
+      meals.image = mealimage?.filename
+      const addedmeal = await this.Interactor.addmeal(meals)
+      
+      if(addedmeal){        
+        return res 
+        .status(ResponseStatus.Accepted)
+        .json({ message: AUTH_ERRORS.UPDATION_SUCCESS.message ,addedmeal})
+      }
+      return res 
+      .status(ResponseStatus.NotFound)
+      .json({ message: AUTH_ERRORS.USER_NOT_FOUND.message })
+    
+    
+      
+    } catch (error) {
+      next(error);
+    }
+    
+    }
+
+    getMeals = async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        
+        const meals = await this.Interactor.getMeals()
+        
+        if(meals){        
+          return res 
+          .status(ResponseStatus.Accepted)
+          .json({ message: AUTH_ERRORS.FETCH_SUCCESS.message,meal:meals })
+        }
+        return res 
+        .status(ResponseStatus.NotFound)
+        .json({ message: AUTH_ERRORS.NO_DATA.message })
+      
+      
+        
+      } catch (error) {
+        next(error);
+      }
+      
+      }
+  
 
 
 

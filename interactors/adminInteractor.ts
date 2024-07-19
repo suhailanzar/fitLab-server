@@ -3,6 +3,7 @@ import { IadminRepository } from "../interfaces/IadminRepository";
 import Jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { Trainer } from "../entities/Trainer";
+import { Meal } from "../entities/admin";
 
 dotenv.config();
 
@@ -25,12 +26,22 @@ export class adminInteractor implements IadminInteractor {
   getTrainers =():Promise<Array<Trainer>> =>{
     return this.adminRepository.getTrainers()
   }
+ 
   trainerapproval =(trainerId:string):Promise<any> =>{
     return this.adminRepository.trainerapproval(trainerId)
   }
   trainerDetails =(trainerId:string):Promise<any> =>{
     return this.adminRepository.trainerapproval(trainerId)
   }
+
+  addmeal = (meal:Meal):Promise<string | null> =>{
+    return this.adminRepository.addmeal(meal)
+  }
+
+  getMeals =():Promise<any> =>{
+    return this.adminRepository.getMeals()
+  }
+  
   
 
 }

@@ -1,4 +1,6 @@
-import { Payment, User } from "../entities/user";
+import { ObjectId } from "mongoose";
+import { coursePayment, Payment, User } from "../entities/user";
+import { ICourse } from "../entities/Trainer";
 export interface IuserInteractor {
   findUser(email: string): Promise<User | null>;
   signup( username: string, email: string, password: string, isblocked: boolean ): Promise<User | null>;
@@ -16,7 +18,14 @@ export interface IuserInteractor {
   editprofile(data:User, id:string,image:any): Promise<User | null> 
   getuserprofile(id: string): Promise<User | null>;
   subscribe(datas:any,userid:string): Promise<Array<any>>
+  getCourse(page:number,limit:number): Promise<any>
+  getCoursedetails(id:string): Promise<ICourse | null>
+  saveCourse(paymentDetails: coursePayment, userId: string): Promise<string | null>
+  getPurchasedCourses(userId:string):Promise<{Enrolled:any,courses:any}> 
 
+
+
+  
 
 
 }

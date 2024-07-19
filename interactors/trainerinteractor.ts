@@ -1,5 +1,5 @@
  import { ObjectId } from "mongoose";
-import { ICourse, Trainer } from "../entities/Trainer";
+import { ICourse, IPayment, Trainer } from "../entities/Trainer";
 import { Slot } from "../entities/Trainer";
 import { User } from "../entities/user";
 import { ItrainerInteractor } from "../interfaces/Itrainerinteractor";
@@ -169,6 +169,16 @@ export class trainerInteractor implements ItrainerInteractor {
       return await this.trainerrepository.getCourses(trainerid);
     } catch (error) {
       console.error("Error in fetching profile:", error);
+      throw error;
+    }
+  };
+
+  revenueData = async (trainerId: string): Promise<Array<IPayment> | null> => {
+    try {
+      
+      return await this.trainerrepository.revenueData(trainerId);
+    } catch (error) {
+      console.error("Error fetching Revenue data:", error);
       throw error;
     }
   };

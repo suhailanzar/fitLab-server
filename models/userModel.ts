@@ -13,7 +13,8 @@ export interface UserDocument extends Document{
     image:string
     createdat:Date
     subscription:Subscription
-}
+    courses: string[];
+  }
 
 
 
@@ -45,6 +46,7 @@ const UserSchema: Schema<UserDocument> = new Schema({
     image: { type: String }, 
     createdat: { type: Date }, 
     subscription: subscriptionSchema,
+    courses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
 
 });
 

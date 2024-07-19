@@ -65,9 +65,9 @@ export class userController {
 
         const userdata = await this.Interactor.findUser(user.email);
 
-        console.log('user data is ',userdata);
-        
-        
+        console.log('user data is ', userdata);
+
+
         if (userdata) {
           if (userdata.isblocked) {
             return res
@@ -273,14 +273,14 @@ export class userController {
           .status(ResponseStatus.BadRequest)
           .json({ message: AUTH_ERRORS.NO_DATA.message });
       }
-    
+
       const paymentdetails = req.body
-      console.log('dataform paymentis ',paymentdetails);
-      
+      console.log('dataform paymentis ', paymentdetails);
+
       const results = await this.Interactor.bookslot(paymentdetails);
       res.json(results);
 
- 
+
     } catch (error) {
       console.log('enterd catch block');
       next(error);
@@ -290,15 +290,15 @@ export class userController {
 
 
   editprofile = async (req: Request, res: Response, next: NextFunction) => {
-    try {     
-      
+    try {
+
       const id = typeof req.user_id === 'string' ? req.user_id : '';
-    
+
       let profilePic = req.file as Express.Multer.File;
-      console.log('profile picture is ',profilePic);
-      
+      console.log('profile picture is ', profilePic);
+
       let s3Response: any = {};
-  
+
       if (profilePic) {
         s3Response = await uploadS3ProfileImage(profilePic);
         if (!s3Response.error) {
@@ -308,22 +308,22 @@ export class userController {
           return res.status(ResponseStatus.BadRequest).json({ message: "Error uploading image" });
         }
       }
-      
+
       console.log('image in controller is', profilePic);
-      
+
       if (!id) {
         return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.TOKEN_INVALID.message });
       }
-  
+
       const updatedData = req.body;
       const updatedDetails = await this.Interactor.editprofile(updatedData, id, s3Response);
-  
+
       if (updatedDetails) {
-        return res.status(ResponseStatus.Accepted).json({ message: AUTH_ERRORS.UPDATED.message ,profile:updatedDetails});
+        return res.status(ResponseStatus.Accepted).json({ message: AUTH_ERRORS.UPDATED.message, profile: updatedDetails });
       }
-      
+
       return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.REGISTER_FAILED.message });
-  
+
     } catch (error) {
       console.log('Entered catch block of edit profile trainuserer');
       next(error);
@@ -340,17 +340,17 @@ export class userController {
           .status(ResponseStatus.BadRequest)
           .json({ message: 'Request body is missing' });
       }
-  
+
       const data = req.body;
       const results = await this.Interactor.getMessages(data);
 
-      console.log('messagess werer',results);
-      
-  
+      console.log('messagess werer', results);
+
+
       if (results) {
         return res
           .status(ResponseStatus.Accepted)
-          .json({ message: AUTH_ERRORS.FETCH_SUCCESS.message , messages:results });
+          .json({ message: AUTH_ERRORS.FETCH_SUCCESS.message, messages: results });
       } else {
         return res
           .status(ResponseStatus.BadRequest)
@@ -365,19 +365,19 @@ export class userController {
   };
 
 
-  
+
   getprofile = async (req: Request, res: Response, next: NextFunction) => {
     try {
 
       const id = typeof req.user_id === 'string' ? req.user_id : '';
-      console.log('id is',id);
-      
+      console.log('id is', id);
+
 
       const userprofile = await this.Interactor.getuserprofile(id)
 
       if (userprofile) {
-        console.log('userprofile is ',userprofile);
-        
+        console.log('userprofile is ', userprofile);
+
         return res
           .status(ResponseStatus.Accepted)
           .json({ message: AUTH_ERRORS.FETCH_SUCCESS.message, profile: userprofile })
@@ -396,6 +396,8 @@ export class userController {
   }
 
 
+
+
   subscribe = async (req: Request, res: Response, next: NextFunction) => {
     try {
 
@@ -406,21 +408,145 @@ export class userController {
       }
 
       const id = typeof req.user_id === 'string' ? req.user_id : '';
-      console.log('id is',id);
-    
+      console.log('id is', id);
+
       const paymentdetails = req.body
-      console.log('dataform paymentis ',paymentdetails);
-      
-      const results = await this.Interactor.subscribe(paymentdetails,id);
-      if(!results)  return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.REGISTER_FAILED.message });
+      console.log('dataform paymentis ', paymentdetails);
+
+      const results = await this.Interactor.subscribe(paymentdetails, id);
+      if (!results) return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.REGISTER_FAILED.message });
       res.json(results);
 
- 
+
     } catch (error) {
       console.log('enterd catch block');
       next(error);
     }
 
   }
+
+  getCourse = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const page = parseInt(req.query.page as string, 10) || 1;
+      const limit = 4;
+
+      console.log('getcourse',page,limit);
+      
+
+      const { courses, totalCourses } = await this.Interactor.getCourse(page, limit);
+
+      return res.status(ResponseStatus.Accepted).json({
+        courses,
+        currentPage: page,
+        totalPages: Math.ceil(totalCourses / limit),
+        totalCourses
+      });
+    } catch (error) {
+      console.log('Entered catch block of getCourse');
+      next(error);
+    }
+  };
+
+  getCourseDetails = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+
+      if (!req.body) {
+        return res
+          .status(ResponseStatus.NotFound)
+          .json({ message: AUTH_ERRORS.NO_DATA.message })
+      }
+
+      let courseid = req.params.id
+
+      console.log('id in the controller is courseid', courseid);
+
+
+      const getCoursedetails = await this.Interactor.getCoursedetails(courseid)
+
+      console.log('course detial is', getCoursedetails);
+
+
+      if (getCoursedetails) {
+        return res
+          .status(ResponseStatus.Accepted)
+          .json({ message: AUTH_ERRORS.FETCH_SUCCESS.message, course: getCoursedetails })
+      }
+      return res
+        .status(ResponseStatus.NotFound)
+        .json({ message: AUTH_ERRORS.NO_DATA.message })
+
+
+
+    } catch (error) {
+      console.log('enterd catch block of getCourse');
+      next(error);
+    }
+
+  }
+
+  saveCourse = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+
+      if (!req.body) {
+        return res
+          .status(ResponseStatus.NotFound)
+          .json({ message: AUTH_ERRORS.NO_DATA.message });
+      }
+
+      const userId = req.user_id;
+      const paymentDetails = req.body
+
+      if (!userId || !paymentDetails) {
+        return res
+          .status(ResponseStatus.NotFound)
+          .json({ message: AUTH_ERRORS.NO_DATA.message });
+      }
+
+      const saveCourseResult = await this.Interactor.saveCourse(paymentDetails, userId);
+
+      if (saveCourseResult) {
+        return res
+          .status(ResponseStatus.Accepted)
+          .json({ message: AUTH_ERRORS.PAYMENT_SUCCESS.message });
+      }
+
+      return res
+        .status(ResponseStatus.NotFound)
+        .json({ message: AUTH_ERRORS.PAYMENT_FAILED.message });
+
+    } catch (error) {
+      console.log('entered catch block of saveCourse');
+      next(error);
+    }
+  }
+
+
+
+  
+  getPurchasedCourses = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user_id;
+
+      if (!userId ) {
+        return res
+          .status(ResponseStatus.NotFound)
+          .json({ message: AUTH_ERRORS.NO_DATA.message });
+      }
+
+      const courses = await this.Interactor.getPurchasedCourses( userId);
+
+
+      if (courses) {
+        return res
+          .status(ResponseStatus.Accepted)
+          .json({ message: AUTH_ERRORS.FETCH_SUCCESS.message ,Enrolled:courses.Enrolled,Courses:courses.courses});
+      }
+
+   
+    } catch (error) {
+      console.log('Entered catch block of getCourse');
+      next(error);
+    }
+  };
 
 }

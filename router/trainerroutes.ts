@@ -30,6 +30,7 @@ router.get('/clients',authenticateTrainerToken,controller.getclients.bind(contro
 router.get('/getbookings',authenticateTrainerToken,controller.getbookings.bind(controller))
 router.get('/getCourses',authenticateTrainerToken,controller.getCourses.bind(controller))
 router.post('/addCourse',authenticateTrainerToken,videoupload.any(),controller.addCourse.bind(controller))
+router.get("/getRevenueData",authenticateTrainerToken,controller.getRevenueData.bind(controller))
 
 
 
