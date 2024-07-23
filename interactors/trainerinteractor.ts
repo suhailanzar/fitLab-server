@@ -104,10 +104,10 @@ export class trainerInteractor implements ItrainerInteractor {
   };
 
 
-  addslot = async (id:string,slot:Slot): Promise< Slot | null> => {
+  addSlots = async (id: string, slots: Slot[]): Promise<Slot[] | string> => {
     try {
       
-      return await this.trainerrepository.addslot(id,slot);
+      return await this.trainerrepository.addSlots(id,slots);
     } catch (error) {
       console.error("Error in adding slot:", error);
       throw error;
@@ -159,6 +159,22 @@ export class trainerInteractor implements ItrainerInteractor {
       return await this.trainerrepository.addCourse(CourseDetails);
     } catch (error) {
       console.error("Error in updainng document:", error);
+      throw error;
+    }
+  };
+
+  getMessagesTrainer = async (data: any): Promise<Array<any> | string> => {
+    try {
+      const messages = await this.trainerrepository.getMessagesTrainer(data);
+  
+      if (messages.length > 0) {
+        return messages;
+      } else {
+        console.log("No messages found");
+        return ["No messages found"];
+      }
+    } catch (error) {
+      console.error("Error in getMessages:", error);
       throw error;
     }
   };

@@ -26,6 +26,7 @@ export class Slot{
         public readonly username: string | null,
         public readonly date: string,
         public readonly startTime: string,
+        public readonly endTime: string,
         public readonly price: number,
         public readonly status: boolean,
         public readonly id :string
@@ -54,6 +55,7 @@ export class ICourse {
         public readonly author: string,
         public readonly courseName: string,
         public readonly description: string,
+        public readonly thumbnail: string,
         public readonly modules: IModule[],
         public readonly Price: number,
         public readonly trainerId: ObjectId,

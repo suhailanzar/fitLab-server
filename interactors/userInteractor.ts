@@ -223,6 +223,17 @@ export class userInteractor implements IuserInteractor {
   }
 
 
+
+  updateModuleCompletion =(moduleId:string,courseId:string, complete:boolean ):Promise<string | null> =>{
+    try {
+      return this.userRepository.updateModuleCompletion(moduleId,courseId,complete)
+     } catch (error) {
+      console.error("Error in saving course payment", error);
+      throw error;
+    }
+  }
+
+
   
 
   

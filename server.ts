@@ -27,9 +27,10 @@ app.use('/trainer',trainerrouter)
 
 
 
-const server = app.listen(port, ()=>{
+const server = app.listen(port,  ()=>{
     console.log(`Server is running on http://localhost:${port}`);    
 })
 
 
 configureSocket(server)
+

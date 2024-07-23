@@ -114,7 +114,7 @@ export class userRepository implements IuserRepository {
       };
 
       const token = jwt.sign(plainPayload, process.env.SECRET_LOGIN as string, {
-        expiresIn: "2h",
+        expiresIn: "24h",
       });
 
       return token;
@@ -266,6 +266,9 @@ export class userRepository implements IuserRepository {
 
   getMessages = async (data: any): Promise<Array<any> | string> => {
     try {
+
+      console.log('entered get messages');
+      
       const messages = await Message.find({
         $or: [
           { senderId: data.userid, receiverId: data.trainerid },
@@ -277,7 +280,7 @@ export class userRepository implements IuserRepository {
         return messages;
       } else {
         console.log("No messages found");
-        return "no messages";
+        return [];
       }
     } catch (error) {
       console.log("error", error);
@@ -428,6 +431,7 @@ export class userRepository implements IuserRepository {
       author: course.author,
       courseName: course.courseName,
       description: course.description,
+      thumbnail: course.thumbnail,
       modules: modules,
       Price: course.Price,
       trainerId: course.trainerId,
@@ -516,7 +520,6 @@ saveCourse = async (paymentDetails: coursePayment, userId: string): Promise<stri
 
 getPurchasedCourses = async (userId: string): Promise<{ Enrolled: any, courses: any }> => {
   try {
-    // Find all enrolled courses for the user
     const enrolledCourses = await EnrolledCourse.find({ userId });
 
     // Collect courseIds from enrolled courses
@@ -533,5 +536,27 @@ getPurchasedCourses = async (userId: string): Promise<{ Enrolled: any, courses: 
   }
 };
 
+updateModuleCompletion = async (moduleId: string, courseId: string, completed: boolean): Promise<string> => {
+  try {
+    const course = await EnrolledCourse.findOne({ courseId });
+
+    if (!course) {
+      throw new Error('Course not found');
+    }
+
+    const moduleIndex = course.modules.findIndex(m => m.moduleId.toString() === moduleId);
+    if (moduleIndex === -1) {
+      throw new Error('Module not found');
+    }
+
+    course.modules[moduleIndex].completed = completed;
+    await course.save();
+
+    return 'Module completion status updated successfully';
+  } catch (error) {
+    console.error('Error in updateModuleCompletion:', error);
+    throw error; // Re-throw the error to be handled by the caller
+  }
+};
 
 }

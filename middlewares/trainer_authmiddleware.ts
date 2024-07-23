@@ -16,6 +16,8 @@ declare global {
 
 const authenticateTrainerToken = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        console.log('entered the authenticate token trianer');
+        
         const authHeader = req.headers['authorization-trainer'];
         
         if (typeof authHeader !== 'string') {
@@ -41,6 +43,8 @@ const authenticateTrainerToken = async (req: Request, res: Response, next: NextF
                 req.user_id = decoded._id;
                 next();
             } else {
+                console.log('no trainer tokens');
+                
                 return res.status(401).json({ message: "Trainer not found" });
             }
         });

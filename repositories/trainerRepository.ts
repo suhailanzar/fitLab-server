@@ -11,6 +11,8 @@ import { UserModel } from "../models/userModel";
 import Course from "../models/courses";
 import mongoose, { ObjectId, Types } from "mongoose";
 import { paymentModel } from "../models/payment";
+import { Message } from "../models/Message";
+
 
 
 export class trainerRepository implements ItrainerRepository {
@@ -115,7 +117,7 @@ export class trainerRepository implements ItrainerRepository {
 
 
       const token = jwt.sign(plainPayload, process.env.SECRET_LOGIN as string, {
-        expiresIn: "2h",
+        expiresIn: "24h",
       });
 
       return token;
@@ -267,41 +269,53 @@ export class trainerRepository implements ItrainerRepository {
   };
 
 
-
-  addslot = async (id: string, slot: Slot): Promise<Slot | null> => {
+  addSlots = async (id: string, slots: Slot[]): Promise<Slot[] | string> => {
     try {
       const existingUser = await trainerModel.findOne({ _id: id });
-
+  
       if (!existingUser) {
-        return null;
+        return "no trainer exist";
       }
+  
+    // Check for overlapping slots
+    const newStartTime = new Date(slots[0].startTime);
+    const newEndTime = new Date(slots[slots.length-1].endTime);
 
+    const isOverlapping = existingUser.availableslots.some(existingSlot => {
+      const existingStartTime = new Date(existingSlot.startTime);
+      const existingEndTime = new Date(existingSlot.endTime);
 
-      const slotToAdd: Slot = {
+      return  (newStartTime < existingEndTime && newEndTime > existingStartTime);
+    });
+
+    if (isOverlapping) {
+      return "slots Already Exists Choose another time";
+    }
+  
+      const slotsToAdd: Slot[] = slots.map(slot => ({
         userid: null,
         username: null,
         date: slot.date,
         startTime: slot.startTime,
+        endTime: slot.endTime,
         price: slot.price,
         status: false,
         id: ""
-      };
-
-      // Add the new slot to the existing available slots
-      existingUser.availableslots.push(slotToAdd);
-
+      }));
+  
+      // Add the new slots to the existing available slots
+      existingUser.availableslots.push(...slotsToAdd);
+  
       // Update the trainer document in the database
       await trainerModel.updateOne({ _id: id }, { availableslots: existingUser.availableslots });
-
-      return slotToAdd
-
-
+  
+      return slotsToAdd;
+  
     } catch (error) {
-      console.error("Error adding slot to trainer profile:", error);
+      console.error("Error adding slots to trainer profile:", error);
       throw error;
     }
   };
-
 
   getslots = async (id: string): Promise<Trainer | null> => {
     try {
@@ -399,58 +413,57 @@ export class trainerRepository implements ItrainerRepository {
 
   editSlot = async (trainerid: string, slotid: string, slotData: Slot): Promise<Slot | null> => {
     try {
-
-
       const trainer = await trainerModel.findById(trainerid);
-      console.log('trainer is ', trainer);
-
-
-      if (!trainer) return null;
-
+  
+      if (!trainer) {
+        console.log('Trainer not found');
+        return null;
+      }
+  
       const updateResult = await trainerModel.updateOne(
         { _id: trainerid, 'availableslots._id': slotid },
         {
           $set: {
             'availableslots.$.date': slotData.date,
             'availableslots.$.startTime': slotData.startTime,
-            'availableslots.$.price': slotData.price
+            'availableslots.$.endTime': slotData.endTime,
           }
         }
       );
-
-
-      console.log('updated result is ', updateResult);
-
-
+  
       if (!updateResult) {
+        console.log('No slots were updated');
         return null;
       }
-
+  
       const updatedTrainer = await trainerModel.findById(trainerid);
       if (!updatedTrainer) return null;
-
+  
       const updatedSlot = updatedTrainer.availableslots.find(slot => slot.id.toString() === slotid);
-
-      if (!updatedSlot) return null;
-
+  
+      if (!updatedSlot) {
+        console.log('Updated slot not found');
+        return null;
+      }
+  
       const result: Slot = {
         date: updatedSlot.date,
         startTime: updatedSlot.startTime,
+        endTime: updatedSlot.endTime,
         price: updatedSlot.price,
-        userid: null,
-        username: null,
-        status: false,
+        userid: updatedSlot.userid,
+        username: updatedSlot.username,
+        status: updatedSlot.status,
         id: slotid
       };
-
+  
       return result;
-
+  
     } catch (error) {
       console.error('Updating slot failed', error);
       return null;
     }
-  };
-
+  }
 
 
 
@@ -491,6 +504,7 @@ export class trainerRepository implements ItrainerRepository {
         author: course.author,
         courseName: course.courseName,
         description: course.description,
+        thumbnail: course.thumbnail,
         modules: course.modules.map((module: any) => ({
           name: module.moduleName,
           description: module.moduleDescription,
@@ -555,4 +569,34 @@ export class trainerRepository implements ItrainerRepository {
       return null; // Return null to indicate failure to fetch data
     }
   };
+
+
+  
+  getMessagesTrainer = async (data: any): Promise<Array<any> | string> => {
+    try {
+
+      console.log('entered get messages');
+      
+      const messages = await Message.find({
+        $or: [
+          { senderId: data.userid, receiverId: data.trainerid },
+          { senderId: data.trainerid, receiverId: data.userid }
+        ]
+      }).sort({ timestamp: 1 });
+
+      console.log('messages in trainre side are');
+      
+
+      if (messages.length > 0) {
+        return messages;
+      } else {
+        console.log("No messages found");
+        return [];
+      }
+    } catch (error) {
+      console.log("error", error);
+      throw error;
+    }
+  }
+
 }

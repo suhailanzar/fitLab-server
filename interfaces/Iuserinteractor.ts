@@ -22,7 +22,7 @@ export interface IuserInteractor {
   getCoursedetails(id:string): Promise<ICourse | null>
   saveCourse(paymentDetails: coursePayment, userId: string): Promise<string | null>
   getPurchasedCourses(userId:string):Promise<{Enrolled:any,courses:any}> 
-
+  updateModuleCompletion (moduleId:string,courseId:string, complete:boolean ):Promise<string | null> 
 
 
   

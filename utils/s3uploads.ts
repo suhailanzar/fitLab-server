@@ -86,4 +86,30 @@ const uploadS3ProfileImage = async (file : any)=>{
 }
 
 
-export {uploadS3Image, uploadS3ProfileImage, uploadS3Video}
+const uploadThumbnail = async (file : any)=>{
+    const params = {
+        Bucket: process.env.S3_BUCKET_COURSES_THUMBNAIL,
+        Key: Date.now().toString() + '-' + file.originalname,
+        Body: file.buffer,
+        ContentType: file.mimetype,
+        ContentDisposition: 'inline'
+    };
+
+    
+    console.log('uploading image: ', params)
+    return new Upload({
+        client : s3config,
+        params : params
+    }).done()
+    .then(data => {
+        console.log('data from bucket', data)
+        return data
+    })
+    .catch(err =>{
+        return {error : true, msg : err}
+    })
+
+}
+
+
+export {uploadS3Image, uploadS3ProfileImage, uploadS3Video , uploadThumbnail}

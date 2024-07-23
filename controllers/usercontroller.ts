@@ -549,4 +549,38 @@ export class userController {
     }
   };
 
+
+
+  
+  updateModuleCompletion = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user_id;
+      const { courseId, moduleId } = req.params;
+    const { completed } = req.body;
+
+    console.log('detialare ',courseId,moduleId,completed);
+    
+
+      if (!userId ) {
+        return res
+          .status(ResponseStatus.NotFound)
+          .json({ message: AUTH_ERRORS.NO_DATA.message });
+      }
+
+      const completion = await this.Interactor.updateModuleCompletion(moduleId,courseId,completed );
+
+
+      if (completion) {
+        return res
+          .status(ResponseStatus.Accepted)
+          .json({ message: AUTH_ERRORS.FETCH_SUCCESS.message });
+      }
+
+   
+    } catch (error) {
+      console.log('Entered catch block of getCourse');
+      next(error);
+    }
+  };
+
 }

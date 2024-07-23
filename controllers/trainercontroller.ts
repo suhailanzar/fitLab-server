@@ -6,7 +6,7 @@ import { ItrainerInteractor } from "../interfaces/Itrainerinteractor";
 import { Trainer } from "../entities/Trainer";
 import bcrypt from "bcryptjs";
 import { AUTH_ERRORS } from "../constants/errorHandling";
-import { uploadS3Video } from "../utils/s3uploads";
+import { uploadS3Video, uploadThumbnail } from "../utils/s3uploads";
 import { CompleteMultipartUploadCommandOutput } from "@aws-sdk/client-s3/dist-types/commands/CompleteMultipartUploadCommand";
 import { trainerModel } from "../models/trainerModel";
 import mongoose from 'mongoose';
@@ -306,14 +306,14 @@ addslot = async (req: Request, res: Response, next: NextFunction) => {
       return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.TOKEN_INVALID.message });
     }
 
-    const addedslot = await this.Interactor.addslot( id,slot);
+    const addedslot = await this.Interactor.addSlots( id,slot);
     
-    if (addedslot) {
-      
-      return res.status(ResponseStatus.Accepted).json({ message: AUTH_ERRORS.FETCH_SUCCESS.message ,addedslot},);
+    if (typeof addedslot === 'string') {
+      return res.status(ResponseStatus.BadRequest).json({ message: addedslot });
     }
     
-    return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.USER_NOT_FOUND.message });
+    return res.status(ResponseStatus.Accepted).json({ message: AUTH_ERRORS.FETCH_SUCCESS.message, addedslot });
+    
 
   } catch (error) {
     console.log('Entered catch block of addslot');
@@ -435,7 +435,9 @@ addCourse = async (req: Request, res: Response, next: NextFunction) => {
 
     const trainerdetails = await trainerModel.findOne({_id:trainerId})
        
-    const bodyRequest = req.body    
+    const bodyRequest = req.body  
+    console.log('body requesti s',bodyRequest);
+      
     if(!bodyRequest)   return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.NO_DATA.message });  
 
     
@@ -452,9 +454,14 @@ addCourse = async (req: Request, res: Response, next: NextFunction) => {
       
     
     let videos = req.files as Express.Multer.File[];
-    if (videos) {
+
+    const thumbnail = videos.find(file => file.fieldname === 'thumbnail');
+    const videoFiles = videos.filter(file => file.fieldname.startsWith('modules') && file.fieldname.endsWith('[videoFile]'));
+    
+    
+    if (videoFiles) {
       try {
-        const videoUploadResults = await Promise.all(videos.map(file => uploadS3Video(file)));
+        const videoUploadResults = await Promise.all(videoFiles.map(file => uploadS3Video(file)));
         
         // Filter out any failed uploads
         const successfulUploads = videoUploadResults.filter(
@@ -463,7 +470,7 @@ addCourse = async (req: Request, res: Response, next: NextFunction) => {
         );
     
         // Check if we have successful uploads for all videos
-        if (successfulUploads.length === videos.length) {
+        if (successfulUploads.length === videoFiles.length) {
           bodyRequest.modules.forEach((module: any, index: number) => {
             module.videoUrl = successfulUploads[index].Location;
           });
@@ -477,6 +484,22 @@ addCourse = async (req: Request, res: Response, next: NextFunction) => {
         return res.status(ResponseStatus.BadRequest).json({ message: "Error uploading video" });
       }
     }
+
+    let s3Response: any = {};
+
+    if (thumbnail) {
+      s3Response = await uploadThumbnail(thumbnail);
+      if (!s3Response.error) {
+        console.log('url of the image from the s3 bucket', s3Response.Location);
+        bodyRequest.thumbnail = s3Response.Location
+      } else {
+        console.log('error in uploading image to cloud');
+        return res.status(ResponseStatus.BadRequest).json({ message: "Error uploading image" });
+      }
+    }
+
+    console.log('course body request after all uplods',bodyRequest);
+    
 
     const updatedCourse = await this.Interactor.addCourse(bodyRequest);
 
@@ -540,6 +563,40 @@ getRevenueData = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 }
+
+
+
+getMessagesTrainer = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!req.body) {
+      console.log('no request from body');
+      return res
+        .status(ResponseStatus.BadRequest)
+        .json({ message: 'Request body is missing' });
+    }
+
+    const data = req.body;
+    const results = await this.Interactor.getMessagesTrainer(data);
+
+    console.log('messagess werer', results);
+
+
+    if (results) {
+      return res
+        .status(ResponseStatus.Accepted)
+        .json({ message: AUTH_ERRORS.FETCH_SUCCESS.message, messages: results });
+    } else {
+      return res
+        .status(ResponseStatus.BadRequest)
+        .json({ message: AUTH_ERRORS.NO_DATA.message });
+    }
+  } catch (error) {
+    console.error('Error in getMessages:', error);
+    return res
+      .status(ResponseStatus.BadRequest)
+      .json({ message: 'An error occurred while processing the request' });
+  }
+};
 
 
 

@@ -34,7 +34,7 @@ router.get("/getprofile",authenticateUserToken,controller.getprofile.bind(contro
 router.get("/getCourse",authenticateUserToken,controller.getCourse.bind(controller))
 router.get("/getCourseDetails/:id",authenticateUserToken,controller.getCourseDetails.bind(controller))
 router.get("/getPurchasedCourses",authenticateUserToken,controller.getPurchasedCourses.bind(controller))
-
+router.put("/updateModuleCompletion/:moduleId/:courseId", authenticateUserToken, controller.updateModuleCompletion.bind(controller));
 
 
 router.get('/activate', (req: Request, res: Response) => {

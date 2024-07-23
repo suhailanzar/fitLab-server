@@ -13,7 +13,7 @@ export interface ItrainerInteractor {
   trainerLogin(email: string): Promise<string>;
   editProfileTrainer(data:Trainer, id:string,image:Express.Multer.File): Promise<string>;
   getprofile( id:string): Promise<Trainer | null>;
-  addslot( id:string , slot:Slot): Promise< Slot | null>;
+  addSlots(id: string, slots: Slot[]): Promise<Slot[] | string>;
   getslots( id:string): Promise<Trainer | null>;
   getclients(): Promise<Array<User> | null>;
   getbookings(trainerid:string): Promise<Array<Slot> | string>;
@@ -21,5 +21,7 @@ export interface ItrainerInteractor {
   addCourse(CourseDetails:ICourse): Promise<string | null>;
   getCourses(trainerid:ObjectId): Promise<Array<ICourse> | null>;
   revenueData(trainerId: string): Promise<Array<IPayment> | null> 
+  getMessagesTrainer(data: any): Promise<Array<any> | string> 
+
 
 }

@@ -11,6 +11,7 @@ interface ICourse extends Document {
     author: string;
     courseName: string;
     description: string;
+    thumbnail: string;
     modules: IModule[];
     Price: number;
     trainerId: mongoose.Schema.Types.ObjectId;
@@ -49,6 +50,11 @@ const CourseSchema: Schema = new Schema(
             trim: true,
         },
         description: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        thumbnail: {
             type: String,
             required: true,
             trim: true,
