@@ -9,6 +9,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 export class trainerInteractor implements ItrainerInteractor {
+  
   private trainerrepository: ItrainerRepository;
 
   constructor(trainerRepository: ItrainerRepository) {
@@ -198,6 +199,17 @@ export class trainerInteractor implements ItrainerInteractor {
       throw error;
     }
   };
+
+  deleteSlot = async(trainerId:string,slotId:string):Promise<string | null> => {
+    try {
+      
+      return await this.trainerrepository.deleteSlot(trainerId,slotId);
+    } catch (error) {
+      console.error("Error fetching Revenue data:", error);
+      throw error;
+    }
+  }
+
 
 
 }

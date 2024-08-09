@@ -66,4 +66,20 @@ export class coursePayment {
       public readonly updatedAt: Date = new Date()
     ) {}
   }
+
+
+  export class Reports {
+    constructor(
+      public readonly userId: ObjectId,
+      public readonly userName: string,
+      public readonly trainerName: string,
+      public readonly date: Date,
+      public readonly reportType:string,
+      public readonly description: string,
+      public readonly evidence: string,
+      public readonly isReported: boolean,
+      public readonly id?:ObjectId,
+
+    ) {}
+  }
   

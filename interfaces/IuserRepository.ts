@@ -1,6 +1,6 @@
 import { ObjectId } from "mongoose";
 import { ICourse, Trainer } from "../entities/Trainer";
-import { coursePayment, Payment, User } from "../entities/user";
+import { coursePayment, Payment, Reports, User } from "../entities/user";
 export interface IuserRepository {
   findUser(email: string): Promise<User | null>;
   refreshToken(payload: User): Promise<string>;
@@ -22,5 +22,6 @@ export interface IuserRepository {
   saveCourse(paymentDetails: coursePayment, userId: string): Promise<string | null>
   getPurchasedCourses(userId:string):Promise<{Enrolled:any,courses:any}> 
   updateModuleCompletion (moduleId:string,courseId:string, complete:boolean ):Promise<string | null> 
+  submitReport(data:Reports):Promise<string | null>
 
 }

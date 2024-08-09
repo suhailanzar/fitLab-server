@@ -22,6 +22,7 @@ export interface ItrainerInteractor {
   getCourses(trainerid:ObjectId): Promise<Array<ICourse> | null>;
   revenueData(trainerId: string): Promise<Array<IPayment> | null> 
   getMessagesTrainer(data: any): Promise<Array<any> | string> 
+  deleteSlot(slotId:string,trainerId:string):Promise<string | null>
 
 
 }

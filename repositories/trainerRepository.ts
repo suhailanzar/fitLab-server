@@ -272,26 +272,26 @@ export class trainerRepository implements ItrainerRepository {
   addSlots = async (id: string, slots: Slot[]): Promise<Slot[] | string> => {
     try {
       const existingUser = await trainerModel.findOne({ _id: id });
-  
+
       if (!existingUser) {
         return "no trainer exist";
       }
-  
-    // Check for overlapping slots
-    const newStartTime = new Date(slots[0].startTime);
-    const newEndTime = new Date(slots[slots.length-1].endTime);
 
-    const isOverlapping = existingUser.availableslots.some(existingSlot => {
-      const existingStartTime = new Date(existingSlot.startTime);
-      const existingEndTime = new Date(existingSlot.endTime);
+      // Check for overlapping slots
+      const newStartTime = new Date(slots[0].startTime);
+      const newEndTime = new Date(slots[slots.length - 1].endTime);
 
-      return  (newStartTime < existingEndTime && newEndTime > existingStartTime);
-    });
+      const isOverlapping = existingUser.availableslots.some(existingSlot => {
+        const existingStartTime = new Date(existingSlot.startTime);
+        const existingEndTime = new Date(existingSlot.endTime);
 
-    if (isOverlapping) {
-      return "slots Already Exists Choose another time";
-    }
-  
+        return (newStartTime < existingEndTime && newEndTime > existingStartTime);
+      });
+
+      if (isOverlapping) {
+        return "slots Already Exists Choose another time";
+      }
+
       const slotsToAdd: Slot[] = slots.map(slot => ({
         userid: null,
         username: null,
@@ -302,15 +302,15 @@ export class trainerRepository implements ItrainerRepository {
         status: false,
         id: ""
       }));
-  
+
       // Add the new slots to the existing available slots
       existingUser.availableslots.push(...slotsToAdd);
-  
+
       // Update the trainer document in the database
       await trainerModel.updateOne({ _id: id }, { availableslots: existingUser.availableslots });
-  
+
       return slotsToAdd;
-  
+
     } catch (error) {
       console.error("Error adding slots to trainer profile:", error);
       throw error;
@@ -414,12 +414,12 @@ export class trainerRepository implements ItrainerRepository {
   editSlot = async (trainerid: string, slotid: string, slotData: Slot): Promise<Slot | null> => {
     try {
       const trainer = await trainerModel.findById(trainerid);
-  
+
       if (!trainer) {
         console.log('Trainer not found');
         return null;
       }
-  
+
       const updateResult = await trainerModel.updateOne(
         { _id: trainerid, 'availableslots._id': slotid },
         {
@@ -430,22 +430,22 @@ export class trainerRepository implements ItrainerRepository {
           }
         }
       );
-  
+
       if (!updateResult) {
         console.log('No slots were updated');
         return null;
       }
-  
+
       const updatedTrainer = await trainerModel.findById(trainerid);
       if (!updatedTrainer) return null;
-  
+
       const updatedSlot = updatedTrainer.availableslots.find(slot => slot.id.toString() === slotid);
-  
+
       if (!updatedSlot) {
         console.log('Updated slot not found');
         return null;
       }
-  
+
       const result: Slot = {
         date: updatedSlot.date,
         startTime: updatedSlot.startTime,
@@ -456,9 +456,9 @@ export class trainerRepository implements ItrainerRepository {
         status: updatedSlot.status,
         id: slotid
       };
-  
+
       return result;
-  
+
     } catch (error) {
       console.error('Updating slot failed', error);
       return null;
@@ -528,7 +528,7 @@ export class trainerRepository implements ItrainerRepository {
     try {
 
       console.log('trainer id is', trainerId);
-    
+
       let objectId: Types.ObjectId;
       try {
         objectId = new Types.ObjectId(trainerId);
@@ -537,11 +537,11 @@ export class trainerRepository implements ItrainerRepository {
         return null;
       }
 
-      console.log('object id is',objectId);
-      
-  
+      console.log('object id is', objectId);
+
+
       const revenueData = await paymentModel.find({ trainerId: objectId });
-  
+
       console.log('revenue data', revenueData);
 
 
@@ -571,12 +571,12 @@ export class trainerRepository implements ItrainerRepository {
   };
 
 
-  
+
   getMessagesTrainer = async (data: any): Promise<Array<any> | string> => {
     try {
 
       console.log('entered get messages');
-      
+
       const messages = await Message.find({
         $or: [
           { senderId: data.userid, receiverId: data.trainerid },
@@ -584,8 +584,6 @@ export class trainerRepository implements ItrainerRepository {
         ]
       }).sort({ timestamp: 1 });
 
-      console.log('messages in trainre side are');
-      
 
       if (messages.length > 0) {
         return messages;
@@ -597,6 +595,44 @@ export class trainerRepository implements ItrainerRepository {
       console.log("error", error);
       throw error;
     }
+  }
+
+  deleteSlot = async (trainerId: string, slotId: string): Promise<string | null> => {
+
+    try {
+
+      const trainerObjectId = new mongoose.Types.ObjectId(trainerId);
+
+      console.log(trainerObjectId)
+
+        // Now, let's try to find the trainer
+        const trainer = await trainerModel.findById(trainerObjectId);
+      
+
+      if (!trainer) {
+        console.log('Trainer not found in the repo');
+        return null;
+      }
+
+      const deleteResult = await trainerModel.updateOne(
+        { _id: trainerId },
+        {
+          $pull: { availableslots: { _id: slotId } }
+        }
+      );
+
+
+      if (deleteResult.modifiedCount === 0) {
+        throw new Error('Slot not found or already deleted');
+      }
+
+      return "deleteResult";
+    }
+    catch (error) {
+      console.log("error", error);
+      throw error;
+    }
+
   }
 
 }

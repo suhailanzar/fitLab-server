@@ -19,9 +19,15 @@ router.post('/login',controller.login.bind(controller))
 router.post('/addmeal',mealImageUpload.single('image'),controller.addmeal.bind(controller))
 router.get('/getTrainersReq',controller.get_requests.bind(controller))
 router.get('/getTrainers',controller.getTrainers.bind(controller))
+router.get('/blockTrainer/:id',controller.blockTrainer.bind(controller))
+router.get('/blockUser/:id',controller.blockUser.bind(controller))
+router.get('/getUsers',controller.getUsers.bind(controller))
 router.put('/trainerApproval/:id',controller.trainerApproval.bind(controller))
 router.get('/viewtrainer/:id',controller.trainerDetails.bind(controller))
+router.get('/viewUser/:id',controller.userDetails.bind(controller))
 router.get('/getMeals',controller.getMeals.bind(controller))
+router.get('/getReports',controller.getReports.bind(controller))
+router.get('/sendMail/:id',controller.sendMail.bind(controller))
 
 
   

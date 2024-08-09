@@ -1,4 +1,4 @@
-import { coursePayment, Payment, User } from "../entities/user";
+import { coursePayment, Payment, Reports, User } from "../entities/user";
 import { IuserInteractor } from "../interfaces/Iuserinteractor";
 import { IuserRepository } from "../interfaces/IuserRepository";
 import Jwt from "jsonwebtoken";
@@ -235,7 +235,14 @@ export class userInteractor implements IuserInteractor {
 
 
   
-
+  submitReport(data: Reports): Promise<string | null> {
+    try{
+      return this.userRepository.submitReport(data)
+    }catch(error){
+      console.error("Error in submitting report", error);
+      throw error;
+    }
+  }
   
 
 

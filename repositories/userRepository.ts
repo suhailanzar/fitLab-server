@@ -1,5 +1,5 @@
 import { IuserRepository } from "../interfaces/IuserRepository";
-import { coursePayment, enrolledCourse, Payment, User } from "../entities/user";
+import { coursePayment, enrolledCourse, Payment, Reports, User } from "../entities/user";
 import { UserModel } from "../models/userModel";
 import { trainerModel } from "../models/trainerModel";
 import bcrypt from "bcryptjs";
@@ -14,6 +14,7 @@ import Course from "../models/courses";
 import { ICourse, IModule } from "../entities/Trainer";
 import { response } from "express";
 import EnrolledCourse from "../models/purchasedCourses";
+import { reportModel } from "../models/reports";
 
 
 
@@ -267,7 +268,6 @@ export class userRepository implements IuserRepository {
   getMessages = async (data: any): Promise<Array<any> | string> => {
     try {
 
-      console.log('entered get messages');
       
       const messages = await Message.find({
         $or: [
@@ -558,5 +558,41 @@ updateModuleCompletion = async (moduleId: string, courseId: string, completed: b
     throw error; // Re-throw the error to be handled by the caller
   }
 };
+
+submitReport = async (data:Reports):Promise<string | null> => {
+
+  try {
+
+    const userData = await UserModel.findOne({_id:data.userId})
+
+    const report = new reportModel({
+      userId :data.userId,
+      username:userData?.username,
+      trainername:data.trainerName,
+      date:data.date,
+      report:data.reportType,
+      description:data.description,
+      evidence:data.evidence
+    });
+
+    console.log('report in repo is',report);
+    
+
+    const savedReport = await report.save();
+
+    if (savedReport) {
+      console.log('Report successfully saved:', savedReport);
+      return 'success';
+    } else {
+      console.error('Failed to save the report');
+      return null;
+    }
+      
+  } catch (error) {
+    console.error(error)
+    throw new Error("not updated ")
+  }
+
+}
 
 }

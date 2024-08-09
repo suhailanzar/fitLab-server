@@ -27,9 +27,9 @@ export class trainerController {
       if (!req.body) {
         return res
           .status(ResponseStatus.BadRequest)
-          .json({ message: AUTH_ERRORS.NO_DATA.message});
+          .json({ message: AUTH_ERRORS.NO_DATA.message });
       }
-      
+
 
       const Trainer = {
         email: req.body.email ? req.body.email.trim() : null,
@@ -49,7 +49,7 @@ export class trainerController {
       }
 
       const TrainerExist = await this.Interactor.findtrainer(Trainer.email);
-  
+
 
 
       if (TrainerExist) {
@@ -79,10 +79,10 @@ export class trainerController {
               .json({ message: AUTH_ERRORS.ADMIN_APPROVAL.message });
           }
 
-          
+
 
           const token = await this.Interactor.jwt(Trainerdata);
-          
+
           // const refreshToken = await this.Interactor.refreshToken(Trainerdata);
           return res.status(ResponseStatus.Accepted).json({
             message: "login successfull",
@@ -113,7 +113,7 @@ export class trainerController {
 
 
 
-      const { Trainername, email, password , specification } = req.body;
+      const { Trainername, email, password, specification } = req.body;
 
 
       if (!Trainername || !email || !password || !specification) {
@@ -133,18 +133,18 @@ export class trainerController {
       if (!isValidPassword(password)) {
         return res
           .status(ResponseStatus.BadRequest)
-          .json({ message: AUTH_ERRORS.INVALID_PASSWORD.message});
+          .json({ message: AUTH_ERRORS.INVALID_PASSWORD.message });
       }
 
       const encryptedpassword = bcrypt.hashSync(password, 10);
 
       this.trainerData = {
-        trainername:Trainername,
-        email:email,
-        specification:specification,
+        trainername: Trainername,
+        email: email,
+        specification: specification,
         password: encryptedpassword,
         isblocked: false,
-        isapproved:false,
+        isapproved: false,
 
       };
 
@@ -152,7 +152,7 @@ export class trainerController {
 
 
       if (datas) {
-       return  res.status(ResponseStatus.BadRequest)
+        return res.status(ResponseStatus.BadRequest)
           .json({ message: AUTH_ERRORS.USER_EXIST.message });
       }
 
@@ -166,7 +166,7 @@ export class trainerController {
     } catch (error) {
       next(error);
     }
-  }; 
+  };
 
 
 
@@ -176,7 +176,7 @@ export class trainerController {
         return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.EMPASS_REQUIRED.message })
       }
       const { inputone, inputtwo, inputthree, inputfour } = req.body;
-      
+
       // Concatenate the input values as strings
       const combinedString = `${inputone}${inputtwo}${inputthree}${inputfour}`;
 
@@ -184,30 +184,30 @@ export class trainerController {
       const combinedNumber = Number(combinedString);
       const checkingotp = await this.Interactor.otpcheck(combinedNumber, this.trainerData.email)
 
-      
+
       if (checkingotp.isExpired) {
 
         return res
-        .status(ResponseStatus.BadRequest)
-        .json({ message: AUTH_ERRORS.OTP_EXPIRED.message })
+          .status(ResponseStatus.BadRequest)
+          .json({ message: AUTH_ERRORS.OTP_EXPIRED.message })
       }
       if (checkingotp.isValid) {
 
         const createTrainer = await this.Interactor.Registertrainer(this.trainerData)
-        if(createTrainer){
-         return res
-         .status(ResponseStatus.Created)
-         .json({ message: AUTH_ERRORS.REGISTER_SUCCESS.message });
-        }else{
+        if (createTrainer) {
           return res
-          .status(ResponseStatus.BadRequest)
-          .json({ message: AUTH_ERRORS.REGISTER_FAILED.message });
+            .status(ResponseStatus.Created)
+            .json({ message: AUTH_ERRORS.REGISTER_SUCCESS.message });
+        } else {
+          return res
+            .status(ResponseStatus.BadRequest)
+            .json({ message: AUTH_ERRORS.REGISTER_FAILED.message });
         }
-        
+
       } else {
-          return res 
+        return res
           .status(ResponseStatus.BadRequest)
-          .json({ message:AUTH_ERRORS.OTP_INVALID.message })
+          .json({ message: AUTH_ERRORS.OTP_INVALID.message })
 
       }
 
@@ -219,389 +219,409 @@ export class trainerController {
 
 
   resendOtp = async (req: Request, res: Response, next: NextFunction) => {
-      
-    try {     
-     const resendedotp =  await this.Interactor.sendmail(this.trainerData.email)
-     if(resendedotp){
-       return res.status(ResponseStatus.Accepted).json({message:AUTH_ERRORS.OTP_RESEND.message})
-     }
-     return res.status(ResponseStatus.BadRequest).json({message:AUTH_ERRORS.OTP_FAILED.message})
+
+    try {
+      const resendedotp = await this.Interactor.sendmail(this.trainerData.email)
+      if (resendedotp) {
+        return res.status(ResponseStatus.Accepted).json({ message: AUTH_ERRORS.OTP_RESEND.message })
+      }
+      return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.OTP_FAILED.message })
 
 
     } catch (error) {
-     console.log('entered catch block');
-     next(error);
-    }
-   
- 
- }
-
- editProfileTrainer = async (req: Request, res: Response, next: NextFunction) => {
-  try {     
-    const id = typeof req.user_id === 'string'? req.user_id : '';
-    let profilePic = req.file as Express.Multer.File
-    
-    console.log('image in controller is ',profilePic);
-    
-    if (!id) {
-      return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.TOKEN_INVALID.message });
+      console.log('entered catch block');
+      next(error);
     }
 
-    const updatedData = req.body;
-    
 
-    const updatedDetails = await this.Interactor.editProfileTrainer(updatedData, id , profilePic);
-    if (updatedDetails) {
-      return res.status(ResponseStatus.Accepted).json({ message: AUTH_ERRORS.UPDATED.message });
-    }
-    
-    return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.REGISTER_FAILED.message });
-
-  } catch (error) {
-    console.log('Entered catch block of edit profile trainer');
-    next(error);
   }
-}
+
+  editProfileTrainer = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const id = typeof req.user_id === 'string' ? req.user_id : '';
+      let profilePic = req.file as Express.Multer.File
+
+      console.log('image in controller is ', profilePic);
+
+      if (!id) {
+        return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.TOKEN_INVALID.message });
+      }
+
+      const updatedData = req.body;
 
 
+      const updatedDetails = await this.Interactor.editProfileTrainer(updatedData, id, profilePic);
+      if (updatedDetails) {
+        return res.status(ResponseStatus.Accepted).json({ message: AUTH_ERRORS.UPDATED.message });
+      }
 
-getprofile = async (req: Request, res: Response, next: NextFunction) => {
-  try {     
-    
-    const id = typeof req.user_id === 'string'? req.user_id : '';
+      return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.REGISTER_FAILED.message });
 
-    if (!id) {
-      return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.TOKEN_INVALID.message });
+    } catch (error) {
+      console.log('Entered catch block of edit profile trainer');
+      next(error);
     }
-
-    const Details = await this.Interactor.getprofile( id);
-    if (Details) {
-      
-      return res.status(ResponseStatus.Accepted).json({ message: AUTH_ERRORS.FETCH_SUCCESS.message ,Details},);
-    }
-    
-    return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.USER_NOT_FOUND.message });
-
-  } catch (error) {
-    console.log('Entered catch block of edit profile trainer');
-    next(error);
   }
-}
-
-
-addslot = async (req: Request, res: Response, next: NextFunction) => {
-  try {     
-    console.log('entered the controller of the addslot');
-    
-    const id = typeof req.user_id === 'string'? req.user_id : '';
-
-    if(!req.body){
-      return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.NO_DATA.message });
-
-    }
-
-    const slot = req.body
-
-    if (!id) {
-      return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.TOKEN_INVALID.message });
-    }
-
-    const addedslot = await this.Interactor.addSlots( id,slot);
-    
-    if (typeof addedslot === 'string') {
-      return res.status(ResponseStatus.BadRequest).json({ message: addedslot });
-    }
-    
-    return res.status(ResponseStatus.Accepted).json({ message: AUTH_ERRORS.FETCH_SUCCESS.message, addedslot });
-    
-
-  } catch (error) {
-    console.log('Entered catch block of addslot');
-    next(error);
-  }
-}
 
 
 
+  getprofile = async (req: Request, res: Response, next: NextFunction) => {
+    try {
 
-getslots = async (req: Request, res: Response, next: NextFunction) => {
-  try {     
-    
-    const id = typeof req.user_id === 'string'? req.user_id : '';
+      const id = typeof req.user_id === 'string' ? req.user_id : '';
 
-    if (!id) {
-      return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.TOKEN_INVALID.message });
-    }
+      if (!id) {
+        return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.TOKEN_INVALID.message });
+      }
 
-    const Details = await this.Interactor.getslots( id);
-    if (Details) {
-      
-      return res.status(ResponseStatus.Accepted).json({ message: AUTH_ERRORS.FETCH_SUCCESS.message ,Details},);
-    }
-    
-    return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.USER_NOT_FOUND.message });
+      const Details = await this.Interactor.getprofile(id);
+      if (Details) {
 
-  } catch (error) {
-    console.log('Entered catch block of getslots ');
-    next(error);
-  }
-}
+        return res.status(ResponseStatus.Accepted).json({ message: AUTH_ERRORS.FETCH_SUCCESS.message, Details },);
+      }
 
-getclients = async (req: Request, res: Response, next: NextFunction) => {
-  try {     
-    
-
-    const clients = await this.Interactor.getclients();
-    if (clients) {
-      
-      return res.status(ResponseStatus.Accepted).json({ message: AUTH_ERRORS.FETCH_SUCCESS.message ,clients},);
-    }
-    
-    return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.USER_NOT_FOUND.message });
-
-  } catch (error) {
-    console.log('Entered catch block of getclients');
-    next(error);
-  }
-}
-
-
-getbookings = async (req: Request, res: Response, next: NextFunction) => {
-  try {     
-    
-    const traineridd = this.trainerData._id; 
-    if (!traineridd) {
-      console.log('trainer id in get booking is ',traineridd);
-      
-      return res.status(ResponseStatus.BadRequest).json({ message: 'Trainer ID is undefined' });
-    }    
-    const bookings = await this.Interactor.getbookings(traineridd);
-    console.log('bookings are ',bookings);
-    
-    if (bookings) {
-      console.log('entered the booking controller ',bookings);
-      
-      return res.status(ResponseStatus.Accepted).json({ message: AUTH_ERRORS.FETCH_SUCCESS.message ,bookings});
-    }
-    
-    return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.NO_DATA.message });
-
-  } catch (error) {
-    console.log('Entered catch block of getbookings');
-    next(error);
-  }
-}
-
-
-
-editSlot = async (req: Request, res: Response, next: NextFunction) => {
-  try {     
-
-    const trainerId = typeof req.user_id === 'string'? req.user_id : '';
-    
-    if (!trainerId)   return res.status(ResponseStatus.BadRequest).json({ message: 'Trainer ID is undefined' });
-          
-    const bodyrequest = req.body
-
-    if(!bodyrequest)   return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.NO_DATA.message });
-
-    const slotId = bodyrequest.slotid
-    const formdata = bodyrequest.data
-
-    const editedslot = await this.Interactor.editSlot(trainerId,slotId,formdata);
-    console.log('edited slot is ',editedslot);
-    
-    if (editedslot) {
-      console.log('entered the booking controller ',editedslot);
-      
-      return res.status(ResponseStatus.Accepted).json({ message: AUTH_ERRORS.FETCH_SUCCESS.message ,editedslot});
-    }
-    
-    return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.NO_DATA.message });
-
-  } catch (error) {
-    console.log('Entered catch block of getbookings');
-    next(error);
-  }
-}
-
-
-addCourse = async (req: Request, res: Response, next: NextFunction) => {
-  try {     
-
-    const trainerId = typeof req.user_id === 'string'? req.user_id : '';
-    
-    if (!trainerId)   return res.status(ResponseStatus.BadRequest).json({ message: 'Trainer ID is undefined' });
-
-    const trainerdetails = await trainerModel.findOne({_id:trainerId})
-       
-    const bodyRequest = req.body  
-    console.log('body requesti s',bodyRequest);
-      
-    if(!bodyRequest)   return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.NO_DATA.message });  
-
-    
-
-    if(!trainerdetails)  {
       return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.USER_NOT_FOUND.message });
 
-    }else{
-      
-    bodyRequest.trainerId = trainerId    
-    bodyRequest.author = trainerdetails.trainername
-    bodyRequest.createdAt = new Date()
+    } catch (error) {
+      console.log('Entered catch block of edit profile trainer');
+      next(error);
     }
-      
-    
-    let videos = req.files as Express.Multer.File[];
+  }
 
-    const thumbnail = videos.find(file => file.fieldname === 'thumbnail');
-    const videoFiles = videos.filter(file => file.fieldname.startsWith('modules') && file.fieldname.endsWith('[videoFile]'));
-    
-    
-    if (videoFiles) {
-      try {
-        const videoUploadResults = await Promise.all(videoFiles.map(file => uploadS3Video(file)));
-        
-        // Filter out any failed uploads
-        const successfulUploads = videoUploadResults.filter(
-          (result): result is CompleteMultipartUploadCommandOutput => 
-            'Location' in result && typeof result.Location === 'string'
-        );
-    
-        // Check if we have successful uploads for all videos
-        if (successfulUploads.length === videoFiles.length) {
-          bodyRequest.modules.forEach((module: any, index: number) => {
-            module.videoUrl = successfulUploads[index].Location;
-          });
-          console.log('Urls of the videos from the S3 bucket:', successfulUploads.map(url => url.Location));
-        } else {
-          console.error('Error in uploading one or more videos to S3:', videoUploadResults);
-          return res.status(ResponseStatus.BadRequest).json({ message: "Error uploading one or more videos" });
-        }
-      } catch (error) {
-        console.error('Error in uploading video to S3:', error);
-        return res.status(ResponseStatus.BadRequest).json({ message: "Error uploading video" });
+
+  addslot = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      console.log('entered the controller of the addslot');
+
+      const id = typeof req.user_id === 'string' ? req.user_id : '';
+
+      if (!req.body) {
+        return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.NO_DATA.message });
+
       }
+
+      const slot = req.body
+
+      if (!id) {
+        return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.TOKEN_INVALID.message });
+      }
+
+      const addedslot = await this.Interactor.addSlots(id, slot);
+
+      if (typeof addedslot === 'string') {
+        return res.status(ResponseStatus.BadRequest).json({ message: addedslot });
+      }
+
+      return res.status(ResponseStatus.Accepted).json({ message: AUTH_ERRORS.FETCH_SUCCESS.message, addedslot });
+
+
+    } catch (error) {
+      console.log('Entered catch block of addslot');
+      next(error);
     }
+  }
 
-    let s3Response: any = {};
 
-    if (thumbnail) {
-      s3Response = await uploadThumbnail(thumbnail);
-      if (!s3Response.error) {
-        console.log('url of the image from the s3 bucket', s3Response.Location);
-        bodyRequest.thumbnail = s3Response.Location
+
+
+  getslots = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+
+      const id = typeof req.user_id === 'string' ? req.user_id : '';
+
+      if (!id) {
+        return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.TOKEN_INVALID.message });
+      }
+
+      const Details = await this.Interactor.getslots(id);
+      if (Details) {
+
+        return res.status(ResponseStatus.Accepted).json({ message: AUTH_ERRORS.FETCH_SUCCESS.message, Details },);
+      }
+
+      return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.USER_NOT_FOUND.message });
+
+    } catch (error) {
+      console.log('Entered catch block of getslots ');
+      next(error);
+    }
+  }
+
+  getclients = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+
+
+      const clients = await this.Interactor.getclients();
+      if (clients) {
+
+        return res.status(ResponseStatus.Accepted).json({ message: AUTH_ERRORS.FETCH_SUCCESS.message, clients },);
+      }
+
+      return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.USER_NOT_FOUND.message });
+
+    } catch (error) {
+      console.log('Entered catch block of getclients');
+      next(error);
+    }
+  }
+
+
+  getbookings = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+
+      const traineridd = this.trainerData._id;
+      if (!traineridd) {
+        console.log('trainer id in get booking is ', traineridd);
+
+        return res.status(ResponseStatus.BadRequest).json({ message: 'Trainer ID is undefined' });
+      }
+      const bookings = await this.Interactor.getbookings(traineridd);
+      console.log('bookings are ', bookings);
+
+      if (bookings) {
+        console.log('entered the booking controller ', bookings);
+
+        return res.status(ResponseStatus.Accepted).json({ message: AUTH_ERRORS.FETCH_SUCCESS.message, bookings });
+      }
+
+      return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.NO_DATA.message });
+
+    } catch (error) {
+      console.log('Entered catch block of getbookings');
+      next(error);
+    }
+  }
+
+
+
+  editSlot = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+
+      const trainerId = typeof req.user_id === 'string' ? req.user_id : '';
+
+      if (!trainerId) return res.status(ResponseStatus.BadRequest).json({ message: 'Trainer ID is undefined' });
+
+      const bodyrequest = req.body
+
+      if (!bodyrequest) return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.NO_DATA.message });
+
+      const slotId = bodyrequest.slotid
+      const formdata = bodyrequest.data
+
+      const editedslot = await this.Interactor.editSlot(trainerId, slotId, formdata);
+      console.log('edited slot is ', editedslot);
+
+      if (editedslot) {
+        console.log('entered the booking controller ', editedslot);
+
+        return res.status(ResponseStatus.Accepted).json({ message: AUTH_ERRORS.FETCH_SUCCESS.message, editedslot });
+      }
+
+      return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.NO_DATA.message });
+
+    } catch (error) {
+      console.log('Entered catch block of getbookings');
+      next(error);
+    }
+  }
+
+
+  addCourse = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+
+      const trainerId = typeof req.user_id === 'string' ? req.user_id : '';
+
+      if (!trainerId) return res.status(ResponseStatus.BadRequest).json({ message: 'Trainer ID is undefined' });
+
+      const trainerdetails = await trainerModel.findOne({ _id: trainerId })
+
+      const bodyRequest = req.body
+      console.log('body requesti s', bodyRequest);
+
+      if (!bodyRequest) return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.NO_DATA.message });
+
+
+
+      if (!trainerdetails) {
+        return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.USER_NOT_FOUND.message });
+
       } else {
-        console.log('error in uploading image to cloud');
-        return res.status(ResponseStatus.BadRequest).json({ message: "Error uploading image" });
+
+        bodyRequest.trainerId = trainerId
+        bodyRequest.author = trainerdetails.trainername
+        bodyRequest.createdAt = new Date()
       }
+
+
+      let videos = req.files as Express.Multer.File[];
+
+      const thumbnail = videos.find(file => file.fieldname === 'thumbnail');
+      const videoFiles = videos.filter(file => file.fieldname.startsWith('modules') && file.fieldname.endsWith('[videoFile]'));
+
+
+      if (videoFiles) {
+        try {
+          const videoUploadResults = await Promise.all(videoFiles.map(file => uploadS3Video(file)));
+
+          // Filter out any failed uploads
+          const successfulUploads = videoUploadResults.filter(
+            (result): result is CompleteMultipartUploadCommandOutput =>
+              'Location' in result && typeof result.Location === 'string'
+          );
+
+          // Check if we have successful uploads for all videos
+          if (successfulUploads.length === videoFiles.length) {
+            bodyRequest.modules.forEach((module: any, index: number) => {
+              module.videoUrl = successfulUploads[index].Location;
+            });
+            console.log('Urls of the videos from the S3 bucket:', successfulUploads.map(url => url.Location));
+          } else {
+            console.error('Error in uploading one or more videos to S3:', videoUploadResults);
+            return res.status(ResponseStatus.BadRequest).json({ message: "Error uploading one or more videos" });
+          }
+        } catch (error) {
+          console.error('Error in uploading video to S3:', error);
+          return res.status(ResponseStatus.BadRequest).json({ message: "Error uploading video" });
+        }
+      }
+
+      let s3Response: any = {};
+
+      if (thumbnail) {
+        s3Response = await uploadThumbnail(thumbnail);
+        if (!s3Response.error) {
+          console.log('url of the image from the s3 bucket', s3Response.Location);
+          bodyRequest.thumbnail = s3Response.Location
+        } else {
+          console.log('error in uploading image to cloud');
+          return res.status(ResponseStatus.BadRequest).json({ message: "Error uploading image" });
+        }
+      }
+
+      console.log('course body request after all uplods', bodyRequest);
+
+
+      const updatedCourse = await this.Interactor.addCourse(bodyRequest);
+
+      if (!updatedCourse) return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.UPDATION_FAILED.message });
+
+      return res.status(ResponseStatus.Created).json({ message: AUTH_ERRORS.UPDATION_SUCCESS.message });
+
+    } catch (error) {
+      console.log('Entered catch block of getbookings');
+      next(error);
     }
-
-    console.log('course body request after all uplods',bodyRequest);
-    
-
-    const updatedCourse = await this.Interactor.addCourse(bodyRequest);
-
-    if(!updatedCourse) return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.UPDATION_FAILED.message });
-
-    return res.status(ResponseStatus.Created).json({ message: AUTH_ERRORS.UPDATION_SUCCESS.message });
-
-  } catch (error) {
-    console.log('Entered catch block of getbookings');
-    next(error);
   }
-}
 
 
-getCourses = async (req: Request, res: Response, next: NextFunction) => {
-  try {  
-    const trainerId = typeof req.user_id === 'string' ? req.user_id : '';
+  getCourses = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const trainerId = typeof req.user_id === 'string' ? req.user_id : '';
 
-    if (!trainerId) {
-      return res.status(ResponseStatus.BadRequest).json({ message: 'Trainer ID is undefined' });
+      if (!trainerId) {
+        return res.status(ResponseStatus.BadRequest).json({ message: 'Trainer ID is undefined' });
+      }
+
+      const trainerObjectId = new mongoose.Types.ObjectId(trainerId) as any;
+
+      const availableCourses = await this.Interactor.getCourses(trainerObjectId as mongoose.Schema.Types.ObjectId);
+
+      if (availableCourses) {
+        return res.status(ResponseStatus.Accepted).json({ message: AUTH_ERRORS.FETCH_SUCCESS.message, availableCourses });
+      }
+
+      return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.NO_DATA.message });
+
+    } catch (error) {
+      console.log('Entered catch block of getCourses');
+      next(error);
     }
-
-    const trainerObjectId = new mongoose.Types.ObjectId(trainerId) as any;
-
-    const availableCourses = await this.Interactor.getCourses(trainerObjectId as mongoose.Schema.Types.ObjectId);
-
-    if (availableCourses) {
-      return res.status(ResponseStatus.Accepted).json({ message: AUTH_ERRORS.FETCH_SUCCESS.message, availableCourses });
-    }
-    
-    return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.NO_DATA.message });
-
-  } catch (error) {
-    console.log('Entered catch block of getCourses');
-    next(error);
   }
-}
 
-getRevenueData = async (req: Request, res: Response, next: NextFunction) => {
-  try {  
-    const trainerId = typeof req.user_id === 'string' ? req.user_id : '';
+  getRevenueData = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const trainerId = typeof req.user_id === 'string' ? req.user_id : '';
 
-    console.log('traien id string in controlleris',trainerId);
-    
+      console.log('traien id string in controlleris', trainerId);
 
-    if (!trainerId) {
-      return res.status(ResponseStatus.BadRequest).json({ message: 'Trainer ID is undefined' });
+
+      if (!trainerId) {
+        return res.status(ResponseStatus.BadRequest).json({ message: 'Trainer ID is undefined' });
+      }
+
+
+      const revenueData = await this.Interactor.revenueData(trainerId);
+
+      if (revenueData) {
+        return res.status(ResponseStatus.Accepted).json({ message: AUTH_ERRORS.FETCH_SUCCESS.message, revenueData });
+      }
+
+      return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.NO_DATA.message });
+
+    } catch (error) {
+      console.log('Entered catch block of getCourses');
+      next(error);
     }
-
-
-    const revenueData = await this.Interactor.revenueData(trainerId);
-
-    if (revenueData) {
-      return res.status(ResponseStatus.Accepted).json({ message: AUTH_ERRORS.FETCH_SUCCESS.message, revenueData });
-    }
-    
-    return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.NO_DATA.message });
-
-  } catch (error) {
-    console.log('Entered catch block of getCourses');
-    next(error);
   }
-}
 
 
 
-getMessagesTrainer = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    if (!req.body) {
-      console.log('no request from body');
+  getMessagesTrainer = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.body) {
+        console.log('no request from body');
+        return res
+          .status(ResponseStatus.BadRequest)
+          .json({ message: 'Request body is missing' });
+      }
+
+      const data = req.body;
+      const results = await this.Interactor.getMessagesTrainer(data);
+
+
+      if (results) {
+        return res
+          .status(ResponseStatus.Accepted)
+          .json({ message: AUTH_ERRORS.FETCH_SUCCESS.message, messages: results });
+      } else {
+        return res
+          .status(ResponseStatus.BadRequest)
+          .json({ message: AUTH_ERRORS.NO_DATA.message });
+      }
+    } catch (error) {
+      console.error('Error in getMessages:', error);
       return res
         .status(ResponseStatus.BadRequest)
-        .json({ message: 'Request body is missing' });
+        .json({ message: 'An error occurred while processing the request' });
     }
+  };
 
-    const data = req.body;
-    const results = await this.Interactor.getMessagesTrainer(data);
+  deleteSlot = async (req: Request, res: Response, next: NextFunction) => {
 
-    console.log('messagess werer', results);
+    try {
+
+      const trainerId = typeof req.user_id === 'string' ? req.user_id : '';
+      const slotId = req.params.id
+
+      console.log("traine id is in controller",trainerId)
+
+      let deletedSlot  = await this.Interactor.deleteSlot(trainerId,slotId)
+      if(deletedSlot)  return res
+      .status(ResponseStatus.Accepted)
+      .json({ message: AUTH_ERRORS.FETCH_SUCCESS.message });
 
 
-    if (results) {
       return res
-        .status(ResponseStatus.Accepted)
-        .json({ message: AUTH_ERRORS.FETCH_SUCCESS.message, messages: results });
-    } else {
-      return res
-        .status(ResponseStatus.BadRequest)
-        .json({ message: AUTH_ERRORS.NO_DATA.message });
-    }
-  } catch (error) {
-    console.error('Error in getMessages:', error);
-    return res
       .status(ResponseStatus.BadRequest)
-      .json({ message: 'An error occurred while processing the request' });
+      .json({ message: AUTH_ERRORS.UPDATION_FAILED.message });
+
+
+    } catch (error) {
+      console.error(error)
+    }
+
+
   }
-};
-
-
-
 
 }
-
-
 

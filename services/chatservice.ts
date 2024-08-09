@@ -21,38 +21,55 @@ export function configureSocket(expressServer: httpServer) {
   });
 
   const rooms: Record<string, User[]> = {};
-  const broadcasters: Record<string, string> = {}; 
+  const broadcasters: Record<string, string> = {};
   io.on("connection", (socket) => {
 
     // Join a room
     socket.on('joinRoom', (roomId: string) => {
-        console.log('foined room',roomId);
-        
+      console.log(`User ${socket.id} joined room ${roomId}`);
       socket.join(roomId);
     });
 
     // Leave a room
     socket.on('leaveRoom', (roomId: string) => {
-        
+      console.log(`User ${socket.id} left room ${roomId}`);
       socket.leave(roomId);
-      console.log('leaved the room');
 
     });
 
     // Handle sendMessage
     socket.on('sendMessage', async (data: { senderId: string, receiverId: string, message: string }) => {
-        
-      const { senderId, receiverId, message } = data;
-      console.log('message is ',message);
 
-      const newMessage = new Message({ senderId, receiverId, message });
-      await newMessage.save();
+      const { senderId, receiverId, message } = data;
+      console.log('message is ', message);
 
       // Emit message to the room
       const roomId = getRoomId(senderId, receiverId);
+
+      const newMessage = new Message({ senderId, receiverId, message, roomId });
+
+      await newMessage.save();
+
       socket.broadcast.to(roomId).emit('receiveMessage', newMessage);
-      // io.to(roomId).emit('receiveMessage', newMessage);
     });
+
+    // Handle WebRTC signaling
+
+    socket.on('offer', (offer, roomId) => {
+      console.log('Received offer:', offer);
+      socket.to(roomId).emit('offer', offer);
+    });
+
+    socket.on('answer', (answer, roomId) => {
+      console.log('Received answer:', answer);
+      socket.to(roomId).emit('answer', answer);
+    });
+
+    socket.on('candidate', (candidate, roomId) => {
+      console.log('Received candidate:', candidate);
+      socket.to(roomId).emit('candidate', candidate);
+    });
+
 
     socket.on("disconnect", () => {
       for (const room in rooms) {

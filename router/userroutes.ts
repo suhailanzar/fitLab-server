@@ -3,7 +3,7 @@ import { userInteractor } from '../interactors/userInteractor';
 import { userController } from '../controllers/usercontroller';
 import { Router, Request, Response } from 'express';
 import { ResponseStatus } from '../constants/statusCodes';
-import { userpofileupload } from '../utils/multer';
+import { reportfile, userpofileupload } from '../utils/multer';
 import authenticateUserToken from '../middlewares/user_authmiddleware';
 
 const router = Router();
@@ -27,6 +27,7 @@ router.post("/getMessages",authenticateUserToken,controller.getMessages.bind(con
 router.post("/editprofile",authenticateUserToken,userpofileupload.single('image'),controller.editprofile.bind(controller))
 router.post("/subscribe",authenticateUserToken,controller.subscribe.bind(controller))
 router.post("/saveCourse",authenticateUserToken,controller.saveCourse.bind(controller))
+router.post("/submitReport",authenticateUserToken,reportfile.single('evidence'),controller.submitReport.bind(controller))
 
 router.get("/gettrainers",authenticateUserToken,controller.getTrainers.bind(controller))
 router.get("/searchtrainers",authenticateUserToken,controller.searchtrainers.bind(controller))

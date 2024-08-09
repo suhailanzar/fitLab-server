@@ -32,6 +32,7 @@ router.get('/getCourses',authenticateTrainerToken,controller.getCourses.bind(con
 router.post('/addCourse',authenticateTrainerToken,videoupload.any(),controller.addCourse.bind(controller))
 router.post('/getMessagesTrainer',authenticateTrainerToken,controller.getMessagesTrainer.bind(controller))
 router.get("/getRevenueData",authenticateTrainerToken,controller.getRevenueData.bind(controller))
+router.get("/deleteSlot/:id",authenticateTrainerToken,controller.deleteSlot.bind(controller))
 
 
 

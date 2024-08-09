@@ -52,3 +52,37 @@ export async function sendOtpEmail(email: string, otp: string): Promise<void> {
     console.error("Error sending email:", error);
   }
 }
+export async function sendReportEmail(email: string): Promise<void> {
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.EMAIL || '',
+      pass: process.env.PASSWORD || '',
+    },
+  });
+
+  const mailOptions = {
+    from: process.env.EMAIL || '',
+    to: email,
+    subject: "Reported issue Response from FitLab",
+    html: `
+    <div style="font-family: Arial, sans-serif; font-size: 16px; color: #333;">
+  <h2 style="color: #0066cc;">Report Found</h2>
+  <p>Dear Customer,</p>
+  <p>We are pleased to inform you that your requested report has been found by our admin team. We will take a strict action against the issue </p>
+  <p>If you did not expect this email, please contact our support team.</p>
+  <p>Best regards,<br>FitLab</p>
+  <hr>
+  <p style="font-size: 12px; color: #666;">This is an automated message, please do not reply.</p>
+</div>
+
+    `
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Email sent:", info.response);
+  } catch (error) {
+    console.error("Error sending email:", error);
+  }
+}

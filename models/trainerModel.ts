@@ -15,8 +15,8 @@ export interface TrainerDocument extends Document {
 }
 
 const slotSchema: Schema = new Schema({
-    userid: {type: String,required:true},
-    username: {type: String,required:true},
+    userid: {type: String},
+    username: {type: String},
     date: { type: Date, required: true },
     startTime: { type: String, required: true },
     endTime: { type: String, required: true },

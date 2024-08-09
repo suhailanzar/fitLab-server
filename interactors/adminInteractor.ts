@@ -4,6 +4,7 @@ import Jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { Trainer } from "../entities/Trainer";
 import { Meal } from "../entities/admin";
+import { Reports, User } from "../entities/user";
 
 dotenv.config();
 
@@ -14,34 +15,73 @@ export class adminInteractor implements IadminInteractor {
     this.adminRepository = adminrepository;
   }
 
-  
-  adminLogin = (email: string , pass:string): Promise<boolean> => {
-    return this.adminRepository.adminLogin(email,pass)
+
+  adminLogin = async (email: string, pass: string): Promise<boolean> => {
+    return this.adminRepository.adminLogin(email, pass)
   };
 
-  get_requests =():Promise<Array<Trainer>> =>{
+  get_requests = async (): Promise<Array<Trainer>> => {
     return this.adminRepository.get_requests()
   }
 
-  getTrainers =():Promise<Array<Trainer>> =>{
+  getTrainers = async (): Promise<Array<Trainer>> => {
     return this.adminRepository.getTrainers()
   }
- 
-  trainerapproval =(trainerId:string):Promise<any> =>{
-    return this.adminRepository.trainerapproval(trainerId)
+
+  getUsers = async (): Promise<Array<User> | null> => {
+    return this.adminRepository.getUsers()
   }
-  trainerDetails =(trainerId:string):Promise<any> =>{
+
+  trainerapproval = async (trainerId: string): Promise<any> => {
     return this.adminRepository.trainerapproval(trainerId)
   }
 
-  addmeal = (meal:Meal):Promise<string | null> =>{
+  blockTrainer = async (trainerId: string): Promise<string | null> => {
+    return this.adminRepository.blockTrainer(trainerId)
+  }
+
+  blockUser = async (userId: string): Promise<string | null> => {
+    return this.adminRepository.blockUser(userId)
+  }
+
+  trainerDetails = async (trainerId: string): Promise<any> => {
+    return this.adminRepository.trainerDetails(trainerId)
+  }
+
+  userDetails = async (userId: string): Promise<any> => {
+    return this.adminRepository.userDetails(userId)
+  }
+
+  addmeal = async (meal: Meal): Promise<string | null> => {
     return this.adminRepository.addmeal(meal)
   }
 
-  getMeals =():Promise<any> =>{
+  getMeals = (): Promise<any> => {
     return this.adminRepository.getMeals()
   }
-  
-  
+
+
+  getReports = async (): Promise<Reports[] | null> => {
+    try {
+      return await this.adminRepository.getReports();
+    } catch (error) {
+      console.error('Error fetching reports:', error);
+      return null;
+    }
+  }
+
+
+  findUser = async (id: string): Promise<User | null> => {
+    try {
+      return await this.adminRepository.findUser(id);
+    } catch (error) {
+      console.error("Error in login:", error);
+      throw error;
+    }
+  };
+
+
+
+
 
 }

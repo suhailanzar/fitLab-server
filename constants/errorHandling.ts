@@ -32,6 +32,7 @@ interface AuthErrors {
     UPDATION_SUCCESS:AuthError
     PAYMENT_SUCCESS:AuthError
     PAYMENT_FAILED:AuthError
+    EMAIL_SEND:AuthError
 }
 
 const AUTH_ERRORS: AuthErrors = {
@@ -120,6 +121,10 @@ const AUTH_ERRORS: AuthErrors = {
     },
     PAYMENT_FAILED:{
         message:"payment failed "
+
+    },
+    EMAIL_SEND:{
+        message:"Email send successfully"
 
     }
 

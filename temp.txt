@@ -1,0 +1,90 @@
+import { Server as httpServer } from "http";
+import { Server as SocketIOServer, Socket } from "socket.io";
+import { Message } from "../models/Message";
+
+interface User {
+  userId: string;
+  role: string;
+}
+
+export function configureSocket(expressServer: httpServer) {
+  const io = new SocketIOServer(expressServer, {
+    cors: {
+      origin: "http://localhost:4200",
+      methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
+      allowedHeaders: ["Content-Type"],
+      credentials: true,
+    },
+  });
+
+  const rooms: Record<string, User[]> = {};
+  const broadcasters: Record<string, string> = {}; 
+
+  io.on("connection", (socket: Socket) => {
+    console.log('A user connected:', socket.id);
+
+    // Join a room
+    socket.on('joinRoom', (roomId: string) => {
+      console.log('Joined room', roomId);
+      socket.join(roomId);
+      // Notify other users in the room
+      socket.to(roomId).emit('userJoined', socket.id);
+    });
+
+    // Leave a room
+    socket.on('leaveRoom', (roomId: string) => {
+      console.log('Left the room', roomId);
+      socket.leave(roomId);
+      // Notify other users in the room
+      socket.to(roomId).emit('userLeft', socket.id);
+    });
+
+    // Handle sendMessage
+    socket.on('sendMessage', async (data: { senderId: string, receiverId: string, message: string }) => {
+      const { senderId, receiverId, message } = data;
+      console.log('Message is', message);
+
+      const roomId = getRoomId(senderId, receiverId);
+      
+      const newMessage = new Message({ senderId, receiverId, message, roomId });   
+      await newMessage.save();
+
+      socket.to(roomId).emit('receiveMessage', newMessage);
+    });
+
+    // WebRTC signaling
+    socket.on('offer', (data: { offer: RTCSessionDescriptionInit, roomId: string }) => {
+      console.log('Received offer for room', data.roomId);
+      socket.to(data.roomId).emit('offer', { offer: data.offer, senderId: socket.id });
+    });
+
+    socket.on('answer', (data: { answer: RTCSessionDescriptionInit, roomId: string }) => {
+      console.log('Received answer for room', data.roomId);
+      socket.to(data.roomId).emit('answer', { answer: data.answer, senderId: socket.id });
+    });
+
+    socket.on('ice-candidate', (data: { candidate: RTCIceCandidate, roomId: string }) => {
+      console.log('Received ICE candidate for room', data.roomId);
+      socket.to(data.roomId).emit('ice-candidate', { candidate: data.candidate, senderId: socket.id });
+    });
+
+    socket.on("disconnect", () => {
+      console.log('User disconnected:', socket.id);
+      for (const room in rooms) {
+        rooms[room] = rooms[room].filter((user) => user.userId !== socket.id);
+        if (rooms[room].length === 0) {
+          delete rooms[room];
+          delete broadcasters[room];
+        } else if (broadcasters[room] === socket.id) {
+          delete broadcasters[room];
+        }
+        // Notify other users in the room
+        socket.to(room).emit('userLeft', socket.id);
+      }
+    });
+  });
+}
+
+function getRoomId(userId1: string, userId2: string): string {
+  return [userId1, userId2].sort().join('_');
+}

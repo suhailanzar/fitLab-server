@@ -22,14 +22,14 @@ export class Trainer {
 
 export class Slot{
     constructor(
-        public readonly userid: string | null,
-        public readonly username: string | null,
         public readonly date: string,
         public readonly startTime: string,
         public readonly endTime: string,
         public readonly price: number,
         public readonly status: boolean,
-        public readonly id :string
+        public readonly id :string,
+        public readonly userid?: string | null,
+        public readonly username?: string | null,
         
     ){
 

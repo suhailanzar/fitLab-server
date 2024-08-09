@@ -1,5 +1,5 @@
 import { ObjectId } from "mongoose";
-import { coursePayment, Payment, User } from "../entities/user";
+import { coursePayment, Payment, Reports, User } from "../entities/user";
 import { ICourse } from "../entities/Trainer";
 export interface IuserInteractor {
   findUser(email: string): Promise<User | null>;
@@ -23,6 +23,7 @@ export interface IuserInteractor {
   saveCourse(paymentDetails: coursePayment, userId: string): Promise<string | null>
   getPurchasedCourses(userId:string):Promise<{Enrolled:any,courses:any}> 
   updateModuleCompletion (moduleId:string,courseId:string, complete:boolean ):Promise<string | null> 
+  submitReport(data:Reports):Promise<string | null>
 
 
   

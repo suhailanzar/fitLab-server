@@ -1,4 +1,4 @@
-import { Response, Request, NextFunction } from "express";
+import { Response, Request, NextFunction, response } from "express";
 import { ResponseStatus } from "../constants/statusCodes";
 import { isValidEmail } from "../validations/emailValidation";
 import { isValidPassword } from "../validations/passwordValidations";
@@ -344,8 +344,6 @@ export class userController {
       const data = req.body;
       const results = await this.Interactor.getMessages(data);
 
-      console.log('messagess werer', results);
-
 
       if (results) {
         return res
@@ -582,5 +580,35 @@ export class userController {
       next(error);
     }
   };
+
+
+  submitReport  = async (req:Request,  res:Response,  next:NextFunction)=>{
+
+    if(!req.body){
+      return res.status(ResponseStatus.NotFound).json({success:false,message: AUTH_ERRORS.NO_DATA.message})
+    }
+    const userId = req.user_id;
+    const body = req.body
+    let ReportPic = req.file as Express.Multer.File;
+
+    if (ReportPic) {
+      console.log(ReportPic)
+      body.evidence = ReportPic.filename;
+    }
+    body.userId = userId
+
+    const updatedData = await this.Interactor.submitReport(body)
+
+    console.log('updaeed data in the controller is',updatedData);
+    
+    if(updatedData!=null){
+      return res.status(ResponseStatus.Created).json({success:true,message:AUTH_ERRORS.UPDATION_SUCCESS.message})
+    }
+
+    return res.status(ResponseStatus.BadRequest).json({success:false,message:AUTH_ERRORS.UPDATION_FAILED.message})
+
+    
+
+  }
 
 }
