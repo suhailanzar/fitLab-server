@@ -15,7 +15,8 @@ app.use(Session({
   }));
 
 const corsoptions = {
-    orgin: 'http://localhost:4200/',
+    // orgin: 'http://localhost:4200/',
+    orgin: 'https://fitlab-phi.vercel.app/',
     optionsSuccessStatus: 200,
     credentials: true 
 }
