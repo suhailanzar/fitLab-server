@@ -52,6 +52,9 @@ export async function sendOtpEmail(email: string, otp: string): Promise<void> {
     console.error("Error sending email:", error);
   }
 }
+
+
+
 export async function sendReportEmail(email: string): Promise<void> {
   const transporter = nodemailer.createTransport({
     service: "gmail",

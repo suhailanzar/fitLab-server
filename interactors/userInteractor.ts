@@ -5,6 +5,7 @@ import Jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { ObjectId } from "mongoose";
 import { ICourse } from "../entities/Trainer";
+import { Meal } from "../entities/admin";
 
 dotenv.config();
 
@@ -238,6 +239,15 @@ export class userInteractor implements IuserInteractor {
   submitReport(data: Reports): Promise<string | null> {
     try{
       return this.userRepository.submitReport(data)
+    }catch(error){
+      console.error("Error in submitting report", error);
+      throw error;
+    }
+  }
+
+  saveMeal(userId:string,name:string, meals:Meal[]): Promise<string | null> {
+    try{
+      return this.userRepository.saveMeal(userId,name,meals)
     }catch(error){
       console.error("Error in submitting report", error);
       throw error;

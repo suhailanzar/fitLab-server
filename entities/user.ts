@@ -1,4 +1,5 @@
 import { ObjectId } from "mongoose";
+import { Meal } from "./admin";
 
 export class User {
     constructor(
@@ -14,8 +15,8 @@ export class User {
         public readonly height?:number,
         public readonly image?:string,
         public readonly createdat?:Date,
-
-
+        public readonly savedMeals?: { mealName: string; meals: Meal[] }[], 
+        
     ) {}
 }
 

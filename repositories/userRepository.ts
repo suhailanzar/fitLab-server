@@ -15,6 +15,7 @@ import { ICourse, IModule } from "../entities/Trainer";
 import { response } from "express";
 import EnrolledCourse from "../models/purchasedCourses";
 import { reportModel } from "../models/reports";
+import { Meal } from "../entities/admin";
 
 
 
@@ -591,6 +592,29 @@ submitReport = async (data:Reports):Promise<string | null> => {
   } catch (error) {
     console.error(error)
     throw new Error("not updated ")
+  }
+
+}
+saveMeal = async (userId:string,mealName:string,meals:Meal[]):Promise<string | null> => {
+  try {
+    const user = await UserModel.findById(userId);
+
+    console.log('meal name in repo is',mealName);
+
+    console.log("meals are ",meals)
+    
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+    
+    user.savedMeals.push({ mealName, meals });
+    await user.save();
+
+    return 'success';
+  } catch (error) {
+    console.error(error);
+    throw new Error('Meal not saved');
   }
 
 }

@@ -14,9 +14,39 @@ export interface UserDocument extends Document{
     createdat:Date
     subscription:Subscription
     courses: string[];
+    savedMeals: { mealName: string; meals: Meal[] }[]; 
   }
 
+  export interface Meal {
+    type: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+    category: 'Veg' | 'Non-veg';
+    name: string;
+    image: string;
+    description: string;  
+    calories: number;
+    protein: number;
+    fats: number;
+    date: Date;
+}
 
+  const mealSchema = new Schema<Meal>({
+    type: { type: String, enum: ['breakfast', 'lunch', 'dinner', 'snack'], required: true },
+    category: { type: String, enum: ['Veg', 'Non-veg'], required: true },
+    name: { type: String, required: true },
+    image: { type: String, required: true },
+    description: { type: String },
+    calories: { type: Number, required: true },
+    protein: { type: Number, required: true },
+    fats: { type: Number, required: true },
+    date: { type: Date, required: true },
+  });
+
+  const savedMealSchema = new Schema({
+    mealName: { type: String, required: true },
+    meals: [mealSchema], 
+  });
+
+  
 
 interface Subscription {
     name: string;
@@ -47,6 +77,7 @@ const UserSchema: Schema<UserDocument> = new Schema({
     createdat: { type: Date }, 
     subscription: subscriptionSchema,
     courses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
+    savedMeals: [savedMealSchema],  
 
 });
 

@@ -611,4 +611,24 @@ export class userController {
 
   }
 
+  saveMeal  = async (req:Request,  res:Response,  next:NextFunction)=>{
+
+    if(!req.body){
+      return res.status(ResponseStatus.NotFound).json({success:false,message: AUTH_ERRORS.NO_DATA.message})
+    }
+     const userId = req.user_id;
+    const savedName = req.body.name.mealName
+    const meals = req.body.meal
+
+    if(userId) {
+      const updatedData = await this.Interactor.saveMeal(userId,savedName,meals)
+      if(updatedData!=null){
+        return res.status(ResponseStatus.Created).json({success:true,message:AUTH_ERRORS.UPDATION_SUCCESS.message})
+      }
+    }
+
+    return res.status(ResponseStatus.BadRequest).json({success:false,message:AUTH_ERRORS.UPDATION_FAILED.message})
+
+  }
+
 }

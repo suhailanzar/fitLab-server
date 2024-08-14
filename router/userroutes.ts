@@ -28,6 +28,7 @@ router.post("/editprofile",authenticateUserToken,userpofileupload.single('image'
 router.post("/subscribe",authenticateUserToken,controller.subscribe.bind(controller))
 router.post("/saveCourse",authenticateUserToken,controller.saveCourse.bind(controller))
 router.post("/submitReport",authenticateUserToken,reportfile.single('evidence'),controller.submitReport.bind(controller))
+router.post("/saveMeal",authenticateUserToken,controller.saveMeal.bind(controller))
 
 router.get("/gettrainers",authenticateUserToken,controller.getTrainers.bind(controller))
 router.get("/searchtrainers",authenticateUserToken,controller.searchtrainers.bind(controller))
