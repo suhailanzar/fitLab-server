@@ -374,8 +374,6 @@ export class userController {
       const userprofile = await this.Interactor.getuserprofile(id)
 
       if (userprofile) {
-        console.log('userprofile is ', userprofile);
-
         return res
           .status(ResponseStatus.Accepted)
           .json({ message: AUTH_ERRORS.FETCH_SUCCESS.message, profile: userprofile })

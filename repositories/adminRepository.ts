@@ -209,59 +209,38 @@ export class adminRepository implements IadminRepository {
 
       }
    }
-   findUser = async (id: string): Promise<User | null> => {
+
+   findUser = async (userId: string,reportId:string): Promise<User | null> => {
       try {
-         // Start a session for transactions
-         const session = await mongoose.startSession();
-         session.startTransaction();
+        // Find the user document
+        const existingUserDocument = await UserModel.findById(userId);
+    
+        if (!existingUserDocument) {
+          console.log('User not found');
+          return null;
+        }
+    
+        console.log('User found:', existingUserDocument);
 
-         try {
-            // Find the user document
-            const existingUserDocument = await UserModel.findOne({ _id: id }).session(session).exec();
-
-            if (!existingUserDocument) {
-               console.log('User not found');
-               await session.abortTransaction();
-               session.endSession();
-               return null;
-            }
-
-            console.log('User found:', existingUserDocument);
-
-            // Find and update the report document within the transaction
-            const updateReport = await reportModel.findOneAndUpdate(
-               { userId: id },
-               { $set: { isReported: true } },
-               {
-                  new: true, // This option returns the updated document
-                  session: session // Associate this operation with the transaction
-               }
-            );
-
-            if (!updateReport) {
-               console.log('Report not found or not updated');
-               await session.abortTransaction();
-               session.endSession();
-               return existingUserDocument;
-            }
-
-            console.log('Report updated successfully:', updateReport);
-
-            // Commit the transaction if everything went well
-            await session.commitTransaction();
-            session.endSession();
-
-            return existingUserDocument;
-         } catch (error) {
-            console.error('Transaction aborted due to error:', error);
-            await session.abortTransaction();
-            throw error;
-         }
+        // Update the report document with the userId and set isReported to true
+        const updatedReport = await reportModel.findOneAndUpdate(
+          { _id: reportId },
+          { $set: { isReported: true } },
+          { new: true } // This option returns the updated document
+        );
+    
+        if (!updatedReport) {
+          console.log('Report document not found or not updated');
+        } else {
+          console.log('Report updated:', updatedReport);
+        }
+    
+        return existingUserDocument;
       } catch (error) {
-         console.error('Error starting session or transaction:', error);
-         throw error;
+        console.error('Error occurred while finding user or updating report:', error);
+        throw error;
       }
-   };
-
+    };
+    
 
 }

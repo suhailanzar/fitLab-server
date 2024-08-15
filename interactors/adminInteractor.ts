@@ -71,9 +71,9 @@ export class adminInteractor implements IadminInteractor {
   }
 
 
-  findUser = async (id: string): Promise<User | null> => {
+  findUser = async (userid: string,reportid:string): Promise<User | null> => {
     try {
-      return await this.adminRepository.findUser(id);
+      return await this.adminRepository.findUser(userid,reportid);
     } catch (error) {
       console.error("Error in login:", error);
       throw error;

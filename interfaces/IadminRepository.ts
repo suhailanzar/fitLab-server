@@ -16,6 +16,6 @@ export interface IadminRepository {
   addmeal(meals:Meal): Promise<string | null>
   getMeals(): Promise<any>
   getReports(): Promise<Reports[] | null>
-  findUser(id: string): Promise<User | null>;
+  findUser(id: string,reportId:string): Promise<User | null>;
 
 }

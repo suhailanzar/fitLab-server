@@ -321,13 +321,18 @@ export class adminController {
   sendMail = async (req: Request, res: Response, next: NextFunction) => {
     try {
 
-      const paramsvalue = req.params.id
-      if (!paramsvalue) return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.NO_DATA.message })
+      const userId = req.params.userId
+      const reportId = req.params.reportId
 
-      const user = await this.Interactor.findUser(paramsvalue)
+      console.log('user id and report id is,',userId,reportId);
+      
+
+      if (!userId) return res.status(ResponseStatus.BadRequest).json({ message: AUTH_ERRORS.NO_DATA.message })
+
+      const user = await this.Interactor.findUser(userId,reportId)
 
       if (user) {
-        const userMail = user?.email
+        const userMail = user.email
 
         const sendMail = await sendReportEmail(userMail)
         return res.status(ResponseStatus.Accepted).json({ message: AUTH_ERRORS.EMAIL_SEND.message })

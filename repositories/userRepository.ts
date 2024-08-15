@@ -345,8 +345,6 @@ export class userRepository implements IuserRepository {
         return null;
       }
 
-      console.log('find user is login', existingUserDocument);
-
       return existingUserDocument;
     } catch (error) {
       console.log("error", error);

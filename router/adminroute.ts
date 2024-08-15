@@ -27,7 +27,7 @@ router.get('/viewtrainer/:id',controller.trainerDetails.bind(controller))
 router.get('/viewUser/:id',controller.userDetails.bind(controller))
 router.get('/getMeals',controller.getMeals.bind(controller))
 router.get('/getReports',controller.getReports.bind(controller))
-router.get('/sendMail/:id',controller.sendMail.bind(controller))
+router.get('/sendMail/:userId/:reportId',controller.sendMail.bind(controller))
 
 
   
