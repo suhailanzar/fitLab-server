@@ -240,6 +240,8 @@ export class adminController {
 
   addmeal = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      console.log('entered the addmeal');
+      
       if (!req.body) {
         return res
           .status(ResponseStatus.BadRequest)
