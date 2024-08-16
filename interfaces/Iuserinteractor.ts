@@ -25,6 +25,8 @@ export interface IuserInteractor {
   updateModuleCompletion (moduleId:string,courseId:string, complete:boolean ):Promise<string | null> 
   submitReport(data:Reports):Promise<string | null>
   saveMeal(userId:string,name:string,meals:Meal[]):Promise<string | null>
+  getReportsUser(userId:string): Promise<Reports[] | null>
+
 
 
   

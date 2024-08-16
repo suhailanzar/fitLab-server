@@ -253,12 +253,15 @@ export class userInteractor implements IuserInteractor {
       throw error;
     }
   }
+
+    getReportsUser = async (userId:string): Promise<Reports[] | null> => {
+      try {
+        return await this.userRepository.getReportsUser(userId);
+      } catch (error) {
+        console.error('Error fetching reports:', error);
+        return null;
+      }
+    }
+  }
   
 
-
-
-
- 
-  
-
-}

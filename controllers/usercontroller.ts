@@ -629,4 +629,33 @@ export class userController {
 
   }
 
+
+  
+  getReportsUser = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+
+      const userId = req.user_id;
+
+      if(userId){
+        const Reports = await this.Interactor.getReportsUser(userId)
+        if (Reports) {
+          return res
+            .status(ResponseStatus.Accepted)
+            .json({ message: AUTH_ERRORS.FETCH_SUCCESS.message, reports: Reports })
+        }
+
+      }
+    
+      return res
+        .status(ResponseStatus.NotFound)
+        .json({ message: AUTH_ERRORS.NO_DATA.message })
+
+
+
+    } catch (error) {
+      next(error);
+    }
+
+  }
+
 }

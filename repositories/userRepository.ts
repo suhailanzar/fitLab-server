@@ -617,4 +617,29 @@ saveMeal = async (userId:string,mealName:string,meals:Meal[]):Promise<string | n
 
 }
 
+
+getReportsUser = async (userid:string): Promise<Reports[] | null> => {
+  try {
+     const Reports = await reportModel.find({userId:userid})
+
+     const formattedReports: Reports[] = Reports.map(report => ({
+        userId: report.userId,
+        userName: report.username,
+        trainerName: report.trainername,
+        date: report.date,
+        reportType: report.report,
+        description: report.description,
+        evidence: report.evidence,
+        isReported: report.isReported,
+        _id: report._id
+
+     }))
+     return formattedReports
+  } catch (error) {
+     console.error(error)
+     return null
+
+  }
+}
+
 }
